@@ -1,0 +1,11 @@
+[user]
+	name = allen
+	email = yuyalun.allen@gmail.com
+[core]
+	excludesfile = /home/allen/.gitigore_global
+	editor = /usr/bin/vim
+	ignorecase = false
+[push]
+	default = current
+[init]
+	defaultBranch = main
