@@ -33,6 +33,9 @@ command W w !sudo tee % > /dev/null
 " Set 7 lines to the cursor - when moving vertically using j/k
 set so=7
 
+" Decrease delay of <esc>
+set ttimeoutlen=5
+
 " Avoid garbled characters in Chinese language windows OS
 let $LANG='en'
 set langmenu=en
@@ -86,7 +89,7 @@ set magic
 " Show matching brackets when text indicator is over them
 set showmatch
 " How many tenths of a second to blink when matching brackets
-set mat=2
+set mat=1
 
 " No annoying sound on errors
 set noerrorbells visualbell t_vb=
@@ -199,3 +202,5 @@ nmap <M-j> mz:m+<cr>`z
 nmap <M-k> mz:m-2<cr>`z
 vmap <M-k> :m'<-2<cr>`>my`<mzgv`yo`z
 vmap <M-j> :m'>+<cr>`<my`>mzgv`yo`z
+
+command! VB normal! <C-v>
