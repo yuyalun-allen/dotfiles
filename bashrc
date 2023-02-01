@@ -127,13 +127,17 @@ source "$OSH"/oh-my-bash.sh
 # Example aliases
 # alias bashconfig="mate ~/.bashrc"
 # alias ohmybash="mate ~/.oh-my-bash"
+
 # Common Use Environment Variables
 	set -o vi
   export EDITOR="/usr/bin/vim"
 # Alias
   alias open="xdg-open"
-  alias news="tmux new -t"
-  alias atts="tmux a -t"
+  alias nws="tmux new -t"
+  alias ats="tmux a -t"
   alias fd="fdfind"
   alias clip="clip.exe"
   alias bat="cat /sys/class/power_supply/BAT1/capacity"
+# Special Use Environment Variables
+  export NEMU_HOME="/home/allen/code/c/ics2020/nemu"
+  export AM_HOME="/home/allen/code/c/ics2020/abstract-machine"
