@@ -102,6 +102,7 @@ set foldcolumn=1
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Enable syntax highlighting
 syntax enable
+highlight Visual cterm=reverse ctermbg=NONE
 
 " Set extra options when running in GUI mode
 if has("gui_running")
