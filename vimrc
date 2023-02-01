@@ -103,13 +103,6 @@ set foldcolumn=1
 " Enable syntax highlighting
 syntax enable
 
-try
-    colorscheme desert
-catch
-endtry
-
-set background=dark
-
 " Set extra options when running in GUI mode
 if has("gui_running")
     set guioptions-=T
@@ -203,4 +196,27 @@ nmap <M-k> mz:m-2<cr>`z
 vmap <M-k> :m'<-2<cr>`>my`<mzgv`yo`z
 vmap <M-j> :m'>+<cr>`<my`>mzgv`yo`z
 
+" Customizing
 command! VB normal! <C-v>
+set pastetoggle=<F5>
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" =>Vundle Required
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set shell=/bin/bash
+filetype off
+filetype plugin indent on
+set rtp+=~/.vim/bundle/Vundle.vim
+
+call vundle#begin()
+Plugin 'VundleVim/Vundle.vim'
+Plugin 'ycm-core/YouCompleteMe'
+call vundle#end()
+
+" Settings for YCM
+" let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/.ycm_extra_conf.py'
+set completeopt-=preview
+nnoremap <leader>j :YcmCompleter GoTo<CR>
+nmap <leader>fw <Plug>(YCMFindSymbolInWorkspace)
+nmap <leader>fd <Plug>(YCMFindSymbolInDocument)
