@@ -161,6 +161,9 @@ source "$OSH"/oh-my-bash.sh
               rm -f "$NNN_TMPFILE" > /dev/null
       fi
   }
+# Common Use Environment Variables
+  export BROWSER="explorer.exe"
+  export EDITOR="/usr/bin/vim"
 # Alias
   alias open="xdg-open"
   alias nws="tmux new -t"
@@ -169,5 +172,5 @@ source "$OSH"/oh-my-bash.sh
   alias clip="clip.exe"
   alias bat="cat /sys/class/power_supply/BAT1/capacity"
 # Special Use Environment Variables
-  export NEMU_HOME="/home/allen/code/c/ics2020/nemu"
-  export AM_HOME="/home/allen/code/c/ics2020/abstract-machine"
+  export NEMU_HOME="/home/allen/Code/c/ics2020/nemu"
+  export AM_HOME="/home/allen/Code/c/ics2020/abstract-machine"
