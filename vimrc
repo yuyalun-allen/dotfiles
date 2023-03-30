@@ -208,19 +208,19 @@ set pastetoggle=<F5>
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " =>Vundle Required
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-set shell=/bin/bash
-filetype off
-filetype plugin indent on
-set rtp+=~/.vim/bundle/Vundle.vim
-
-call vundle#begin()
-Plugin 'VundleVim/Vundle.vim'
-Plugin 'ycm-core/YouCompleteMe'
-call vundle#end()
+" set shell=/bin/bash
+" filetype off
+" filetype plugin indent on
+" set rtp+=~/.vim/bundle/Vundle.vim
+" 
+" call vundle#begin()
+" Plugin 'VundleVim/Vundle.vim'
+" Plugin 'ycm-core/YouCompleteMe'
+" call vundle#end()
 
 " Settings for YCM
 " let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/.ycm_extra_conf.py'
-set completeopt-=preview
-nnoremap <leader>j :YcmCompleter GoTo<CR>
-nmap <leader>fw <Plug>(YCMFindSymbolInWorkspace)
-nmap <leader>fd <Plug>(YCMFindSymbolInDocument)
+" set completeopt-=preview
+" nnoremap <leader>j :YcmCompleter GoTo<CR>
+" nmap <leader>fw <Plug>(YCMFindSymbolInWorkspace)
+" nmap <leader>fd <Plug>(YCMFindSymbolInDocument)

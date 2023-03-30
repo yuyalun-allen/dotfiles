@@ -25,7 +25,7 @@ fi
 if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
-. "$HOME/.cargo/env"
+# . "$HOME/.cargo/env"
 
 export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
 export https_proxy="http://${hostip}:7890"
