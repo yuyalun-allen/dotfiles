@@ -11,3 +11,5 @@
 	defaultBranch = main
 [credential]
 	helper = store
+[merge]
+	tool = vimdiff
