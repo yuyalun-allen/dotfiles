@@ -128,9 +128,8 @@ source "$OSH"/oh-my-bash.sh
 # alias bashconfig="mate ~/.bashrc"
 # alias ohmybash="mate ~/.oh-my-bash"
 
-# Common Use Environment Variables
+# Customized behavior
 	set -o vi
-  export EDITOR="/usr/bin/vim"
   n ()
   {
       # Block nesting of nnn in subshells
@@ -161,9 +160,15 @@ source "$OSH"/oh-my-bash.sh
               rm -f "$NNN_TMPFILE" > /dev/null
       fi
   }
+  bind -x '"\C-l": clear; ls'
 # Common Use Environment Variables
   export BROWSER="explorer.exe"
   export EDITOR="/usr/bin/vim"
+  export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
+  export XDG_CONFIG_HOME="$HOME/.config"
+  export XDG_CACHE_HOME="$HOME/.cache"
+  export XDG_DATA_HOME="$HOME/.local/share"
+  export XDG_STATE_HOME="$HOME/.local/state"
 # Alias
   alias open="xdg-open"
   alias nws="tmux new -t"
