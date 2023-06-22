@@ -26,8 +26,6 @@ if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
 
-<<<<<<< HEAD
-=======
 if [ -d "$HOME/.cargo" ] ; then
     . "$HOME/.cargo/env"
 fi
