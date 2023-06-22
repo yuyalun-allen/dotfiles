@@ -162,8 +162,6 @@ source "$OSH"/oh-my-bash.sh
   }
   bind -x '"\C-l": clear; ls'
 # Common Use Environment Variables
-  export BROWSER="explorer.exe"
-  export EDITOR="/usr/bin/vim"
   export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
   export XDG_CONFIG_HOME="$HOME/.config"
   export XDG_CACHE_HOME="$HOME/.cache"
@@ -174,8 +172,3 @@ source "$OSH"/oh-my-bash.sh
   alias nws="tmux new -t"
   alias ats="tmux a -t"
   alias fd="fdfind"
-  alias clip="clip.exe"
-  alias bat="cat /sys/class/power_supply/BAT1/capacity"
-# Special Use Environment Variables
-  export NEMU_HOME="/home/allen/Code/c/ics2020/nemu"
-  export AM_HOME="/home/allen/Code/c/ics2020/abstract-machine"
