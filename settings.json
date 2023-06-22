@@ -1,13 +1,21 @@
 {
     // Common Settings
     "workbench.colorTheme": "Quiet Light",
-    "editor.fontSize": 22,
+    "workbench.startupEditor": "none",
+    "workbench.editor.untitled.hint": "hidden",
+
+    "editor.fontSize": 20,
     "editor.fontWeight": "500",
     "debug.console.fontSize": 17,
-    "markdown.preview.fontSize": 20,
-    "terminal.integrated.fontSize": 17,
     "editor.fontLigatures": false,
-    "editor.fontFamily": "CaskaydiaCove Nerd Font, Consolas, 'Courier New', monospace",
+    "editor.fontFamily": "CaskaydiaCove Nerd Font, Noto Serif SC, Consolas, 'Courier New', monospace",
+    "editor.cursorSurroundingLines": 10,
+    "editor.largeFileOptimizations": false,
+    "editor.inlineSuggest.enabled": true,
+
+    "terminal.integrated.fontSize": 17,
+    "keyboard.dispatch": "keyCode",
+    "explorer.confirmDelete": false,
 
     // For Vim Extension
     "vim.easymotion": true,
@@ -39,6 +47,12 @@
             ]
         },
         {
+            "before": ["leader", "o"],
+            "command": [
+                "workbench.action.navigateBack",
+            ]
+        },
+        {
             "before": [":"],
             "commands": [
                 "workbench.action.showCommands",
@@ -52,6 +66,19 @@
     "[python]": {
         "editor.formatOnType": true
     },
-    "C_Cpp.intelliSenseEngine": "disabled"
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "notebook.cellToolbarLocation": {
+        "default": "right",
+        "jupyter-notebook": "left"
+    },
+    "workbench.editorAssociations": {
+        "*.ppt": "default",
+        "*.png": "imagePreview.previewEditor"
+    },
+    "vscode-office.openOutline": false,
+    "markdown.preview.fontFamily": "Noto Serif SC ,  -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI',  system-ui, 'Ubuntu', 'Droid Sans', sans-serif, ",
+    "markdown.preview.fontSize": 22,
+    "clangd.path": "/home/allen/.config/Code/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/15.0.6/clangd_15.0.6/bin/clangd",
+    "jupyter.askForKernelRestart": false,
 
 }
