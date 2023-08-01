@@ -26,8 +26,14 @@ if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
 
+# set PATH for ruby gem
+if [ -d "$HOME/.local/share/gem/ruby/2.7.0/bin" ] ; then
+    PATH="$HOME/.local/share/gem/ruby/2.7.0/bin:$PATH"
+fi
+
+# set PATH for rust cargo
 if [ -d "$HOME/.cargo" ] ; then
-    . "$HOME/.cargo/env"
+    PATH="$HOME/.cargo/env:$PATH"
 fi
 
 fish
