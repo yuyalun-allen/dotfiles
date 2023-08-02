@@ -167,8 +167,17 @@ source "$OSH"/oh-my-bash.sh
   export XDG_CACHE_HOME="$HOME/.cache"
   export XDG_DATA_HOME="$HOME/.local/share"
   export XDG_STATE_HOME="$HOME/.local/state"
+  export RBENV_ROOT="$XDG_DATA_HOME/rbenv"
+  eval "$($RBENV_ROOT/bin/rbenv init - bash)"
+
 # Alias
   alias open="xdg-open"
   alias nws="tmux new -t"
   alias ats="tmux a -t"
   alias fd="fdfind"
+
+# Proxy settings
+  export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
+  export https_proxy="http://${hostip}:7890"
+  export http_proxy="http://${hostip}:7890"
+
