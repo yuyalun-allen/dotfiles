@@ -176,8 +176,20 @@ source "$OSH"/oh-my-bash.sh
   alias ats="tmux a -t"
   alias fd="fdfind"
 
+####
+# Things for wsl
+####
+
+# Alias
+  alias java="java.exe"
+  alias javac="javac.exe"
+
 # Proxy settings
   export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
   export https_proxy="http://${hostip}:7890"
   export http_proxy="http://${hostip}:7890"
 
+
+export NVM_DIR="$HOME/.config/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
