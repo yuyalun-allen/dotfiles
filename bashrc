@@ -186,7 +186,7 @@ source "$OSH"/oh-my-bash.sh
 
 # Proxy settings
   export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
-  export https_proxy="http://${hostip}:7890"
+  export https_proxy="https://${hostip}:7890"
   export http_proxy="http://${hostip}:7890"
 
 
