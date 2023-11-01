@@ -5,11 +5,11 @@ case $- in
 esac
 
 # Path to your oh-my-bash installation.
-export OSH='/home/allen/.oh-my-bash'
+export OSH='/home/allen/.config/oh-my-bash'
 
 # Set name of the theme to load. Optionally, if you set this to "random"
 # it'll load a random theme each time that oh-my-bash is loaded.
-OSH_THEME="pure"
+OSH_THEME="font"
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -31,15 +31,15 @@ OSH_THEME="pure"
 # DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
+ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
+COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
 # much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
+DISABLE_UNTRACKED_FILES_DIRTY="true"
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.  One of the following values can
@@ -129,67 +129,70 @@ source "$OSH"/oh-my-bash.sh
 # alias ohmybash="mate ~/.oh-my-bash"
 
 # Customized behavior
-	set -o vi
-  n ()
-  {
-      # Block nesting of nnn in subshells
-      if [[ "${NNNLVL:-0}" -ge 1 ]]; then
-          echo "nnn is already running"
-          return
-      fi
+set -o vi
+n ()
+{
+  # Block nesting of nnn in subshells
+  if [[ "${NNNLVL:-0}" -ge 1 ]]; then
+    echo "nnn is already running"
+    return
+  fi
+  
+  # The behaviour is set to cd on quit (nnn checks if NNN_TMPFILE is set)
+  # If NNN_TMPFILE is set to a custom path, it must be exported for nnn to
+  # see. To cd on quit only on ^G, remove the "export" and make sure not to
+  # use a custom path, i.e. set NNN_TMPFILE *exactly* as follows:
+  #     NNN_TMPFILE="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"
+  export NNN_TMPFILE="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"
+  
+  # Unmask ^Q (, ^V etc.) (if required, see `stty -a`) to Quit nnn
+  # stty start undef
+  # stty stop undef
+  # stty lwrap undef
+  # stty lnext undef
+  
+  # The backslash allows one to alias n to nnn if desired without making an
+  # infinitely recursive alias
+  \nnn "$@"
+  
+  if [ -f "$NNN_TMPFILE" ]; then
+        . "$NNN_TMPFILE"
+        rm -f "$NNN_TMPFILE" > /dev/null
+  fi
+}
 
-      # The behaviour is set to cd on quit (nnn checks if NNN_TMPFILE is set)
-      # If NNN_TMPFILE is set to a custom path, it must be exported for nnn to
-      # see. To cd on quit only on ^G, remove the "export" and make sure not to
-      # use a custom path, i.e. set NNN_TMPFILE *exactly* as follows:
-      #     NNN_TMPFILE="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"
-      export NNN_TMPFILE="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"
+bind -x '"\C-l": clear; ls'
+# XDG Environment Variables
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_STATE_HOME="$HOME/.local/state"
 
-      # Unmask ^Q (, ^V etc.) (if required, see `stty -a`) to Quit nnn
-      # stty start undef
-      # stty stop undef
-      # stty lwrap undef
-      # stty lnext undef
-
-      # The backslash allows one to alias n to nnn if desired without making an
-      # infinitely recursive alias
-      \nnn "$@"
-
-      if [ -f "$NNN_TMPFILE" ]; then
-              . "$NNN_TMPFILE"
-              rm -f "$NNN_TMPFILE" > /dev/null
-      fi
-  }
-  bind -x '"\C-l": clear; ls'
-# Common Use Environment Variables
-  export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
-  export XDG_CONFIG_HOME="$HOME/.config"
-  export XDG_CACHE_HOME="$HOME/.cache"
-  export XDG_DATA_HOME="$HOME/.local/share"
-  export XDG_STATE_HOME="$HOME/.local/state"
-  export RBENV_ROOT="$XDG_DATA_HOME/rbenv"
-  eval "$($RBENV_ROOT/bin/rbenv init - bash)"
+# Software specific Environment Variables 
+export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
+export JAVA_HOME="/usr/lib/jvm/default-runtime"
+export GRADLE_USER_HOME="$XDG_DATA_HOME/gradle"
+# export RBENV_ROOT="$XDG_DATA_HOME/rbenv"
+# eval "$($RBENV_ROOT/bin/rbenv init - bash)"
+export NVM_DIR="$HOME/.config/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # Alias
-  alias open="xdg-open"
-  alias nws="tmux new -t"
-  alias ats="tmux a -t"
-  alias fd="fdfind"
+alias open="xdg-open"
+alias nws="tmux new -t"
+alias ats="tmux a -t"
+alias fd="fdfind"
+alias activate=". ./.venv/bin/activate"
 
 ####
 # Things for wsl
 ####
 
-# Alias
-  alias java="java.exe"
-  alias javac="javac.exe"
-
 # Proxy settings
+if [ -f /etc/resolv.conf ]; then
   export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
-  export https_proxy="https://${hostip}:7890"
+  export https_proxy="http://${hostip}:7890"
   export http_proxy="http://${hostip}:7890"
+fi
 
-
-export NVM_DIR="$HOME/.config/nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
