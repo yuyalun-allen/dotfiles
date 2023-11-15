@@ -178,6 +178,7 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
+
 # Alias
 alias open="xdg-open"
 alias nws="tmux new -t"
@@ -194,8 +195,10 @@ alias poweroff="systemctl poweroff"
 if [ -f /etc/wsl.conf ]; then
 # Proxy settings
   export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
-  export https_proxy="http://${hostip}:7890"
-  export http_proxy="http://${hostip}:7890"
+  export all_proxy="http://${hostip}:7890"
+  if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
+    exec tmux
+  fi
 
 ###
 # Things for native Arch
@@ -205,8 +208,12 @@ else
   export MOZ_ENABLE_WAYLAND=1 firefox
   alias code="code --enable-features=UseOzonePlatform --ozone-platform=wayland"
   export all_proxy=http://localhost:7890
-  alias update-glados="
+  alias glados-update="
     set +o noclobber 
     curl https://update.glados-config.com/clash/182006/cf44d96/55576/glados-terminal.yaml > $XDG_DATA_HOME/clash/glados.yaml"
+
+  if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [ "$XDG_CURRENT_DESKTOP" = Hyprland ]; then
+    tmux
+  fi
 fi
 
