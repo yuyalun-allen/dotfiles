@@ -2,7 +2,6 @@
     // Common Settings
     "workbench.colorTheme": "Quiet Light",
     "workbench.startupEditor": "none",
-    "workbench.editor.untitled.hint": "hidden",
 
     "editor.fontSize": 20,
     "editor.fontWeight": "500",
@@ -80,5 +79,6 @@
     "markdown.preview.fontSize": 22,
     "clangd.path": "/home/allen/.config/Code/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/15.0.6/clangd_15.0.6/bin/clangd",
     "jupyter.askForKernelRestart": false,
+    "workbench.editor.empty.hint": "hidden",
 
 }

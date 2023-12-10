@@ -130,6 +130,7 @@ source "$OSH"/oh-my-bash.sh
 
 # Customized behavior
 set -o vi
+bind -x '"\C-l": clear'
 n ()
 {
   # Block nesting of nnn in subshells
@@ -161,7 +162,6 @@ n ()
   fi
 }
 
-bind -x '"\C-l": clear; ls'
 # XDG Environment Variables
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_CACHE_HOME="$HOME/.cache"
@@ -172,7 +172,7 @@ export XDG_STATE_HOME="$HOME/.local/state"
 export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
 export JAVA_HOME="/usr/lib/jvm/default-runtime"
 export GRADLE_USER_HOME="$XDG_DATA_HOME/gradle"
-# export RBENV_ROOT="$XDG_DATA_HOME/rbenv"
+export RBENV_ROOT="$XDG_DATA_HOME/rbenv"
 # eval "$($RBENV_ROOT/bin/rbenv init - bash)"
 export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
@@ -186,13 +186,34 @@ alias ats="tmux a -t"
 alias fd="fdfind"
 alias activate=". ./.venv/bin/activate"
 
-####
-# Things for wsl
-####
+alias reboot="systemctl reboot"
+alias poweroff="systemctl poweroff"
 
+####
+# Things for wsl Arch
+####
+if [ -f /etc/wsl.conf ]; then
 # Proxy settings
-if [ -f /etc/resolv.conf ]; then
   export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
   export all_proxy="http://${hostip}:7890"
+  if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
+    exec tmux
+  fi
+
+###
+# Things for native Arch
+###
+else
+# Wayland settings
+  export MOZ_ENABLE_WAYLAND=1 firefox
+  alias code="code --enable-features=UseOzonePlatform --ozone-platform=wayland"
+  export all_proxy=http://localhost:7890
+  alias glados-update="
+    set +o noclobber 
+    curl https://update.glados-config.com/clash/182006/cf44d96/55576/glados-terminal.yaml > $XDG_DATA_HOME/clash/glados.yaml"
+
+  if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [ "$XDG_CURRENT_DESKTOP" = Hyprland ]; then
+    tmux
+  fi
 fi
 
