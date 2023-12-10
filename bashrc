@@ -177,6 +177,7 @@ export GRADLE_USER_HOME="$XDG_DATA_HOME/gradle"
 export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+export NPM_CONFIG_USERCONFIG=$XDG_CONFIG_HOME/npm/npmrc
 
 # Alias
 alias open="xdg-open"
@@ -192,7 +193,6 @@ alias activate=". ./.venv/bin/activate"
 # Proxy settings
 if [ -f /etc/resolv.conf ]; then
   export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
-  export https_proxy="http://${hostip}:7890"
-  export http_proxy="http://${hostip}:7890"
+  export all_proxy="http://${hostip}:7890"
 fi
 
