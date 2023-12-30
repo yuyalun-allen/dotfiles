@@ -168,6 +168,11 @@ export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state"
 
+# Fcitx Environment Variables
+export QT_IM_MODULE=fcitx
+export XMODIFIERS=@im=fcitx
+
+
 # Software specific Environment Variables 
 export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
 export JAVA_HOME="/usr/lib/jvm/default-runtime"
@@ -195,7 +200,10 @@ alias poweroff="systemctl poweroff"
 if [ -f /etc/wsl.conf ]; then
 # Proxy settings
   export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
-  export all_proxy="http://${hostip}:7890"
+  export http_proxy="http://${hostip}:7890"
+	export https_proxy=$http_proxy
+	export HTTP_PROXY=$http_proxy
+	export HTTPS_PROXY=$http_proxy
   if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
     exec tmux
   fi
@@ -205,12 +213,14 @@ if [ -f /etc/wsl.conf ]; then
 ###
 else
 # Wayland settings
-  export MOZ_ENABLE_WAYLAND=1 firefox
-  alias code="code --enable-features=UseOzonePlatform --ozone-platform=wayland"
-  export all_proxy=http://localhost:7890
+# export MOZ_ENABLE_WAYLAND=1 firefox
+  export http_proxy=http://localhost:7890
+  export https_proxy=$http_proxy
+	export HTTP_PROXY=$http_proxy
+	export HTTPS_PROXY=$http_proxy
   alias glados-update="
     set +o noclobber 
-    curl https://update.glados-config.com/clash/182006/cf44d96/55576/glados-terminal.yaml > $XDG_DATA_HOME/clash/glados.yaml"
+    curl https://update.glados-config.com/clash/182006/cf44d96/25175/glados-terminal.yaml > $XDG_DATA_HOME/clash/glados.yaml"
 
   if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [ "$XDG_CURRENT_DESKTOP" = Hyprland ]; then
     tmux
