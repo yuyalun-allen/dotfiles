@@ -13,15 +13,20 @@
             "1": "",
             "2": "",
             "3": "",
+            "4": "",
+            "5": "",
             "urgent": "",
             "focused": "",
             "default": ""
+        },
+        "persistent-workspaces": {
+           "*": [1, 2, 3], // 5 workspaces by default on every monitor
         }
     },
     "custom/launcher":{
         "tooltip": false,
         "format": " ",
-        "on-click": "wofi -show drun",
+        "on-click": "sh $XDG_CONFIG_HOME/wofi/powermenu.sh",
         "on-click-right": "killall wofi"
     },
     "clock": {

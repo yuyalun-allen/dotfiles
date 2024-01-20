@@ -26,7 +26,8 @@
     "vim.whichwrap": "h,l",
     "vim.handleKeys": {
         "<C-a>": false,
-        "<C-f>": false
+        "<C-f>": false,
+        "<C-p>": false
     },
     "vim.normalModeKeyBindings": [
         {
@@ -38,47 +39,10 @@
         {
             "before": ["leader", "<cr>"],
             "commands": [":nohl"]
-        },
-        {
-            "before": ["leader", "j"],
-            "commands": [
-                "editor.action.goToDeclaration"
-            ]
-        },
-        {
-            "before": ["leader", "o"],
-            "command": [
-                "workbench.action.navigateBack",
-            ]
-        },
-        {
-            "before": [":"],
-            "commands": [
-                "workbench.action.showCommands",
-            ],
-            "silent": true
         }
     ],
-
-    // Special Settings
-    "git.openRepositoryInParentFolders": "never",
-    "[python]": {
-        "editor.formatOnType": true
-    },
-    "C_Cpp.intelliSenseEngine": "disabled",
-    "notebook.cellToolbarLocation": {
-        "default": "right",
-        "jupyter-notebook": "left"
-    },
+    "editor.wordWrap": "off",
     "workbench.editorAssociations": {
-        "*.ppt": "default",
-        "*.png": "imagePreview.previewEditor"
+        "*.pdf": "cweijan.officeViewer"
     },
-    "vscode-office.openOutline": false,
-    "markdown.preview.fontFamily": "Noto Serif SC ,  -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI',  system-ui, 'Ubuntu', 'Droid Sans', sans-serif, ",
-    "markdown.preview.fontSize": 22,
-    "clangd.path": "/home/allen/.config/Code/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/15.0.6/clangd_15.0.6/bin/clangd",
-    "jupyter.askForKernelRestart": false,
-    "workbench.editor.empty.hint": "hidden",
-
 }

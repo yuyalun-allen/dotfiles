@@ -131,6 +131,8 @@ source "$OSH"/oh-my-bash.sh
 # Customized behavior
 set -o vi
 bind -x '"\C-l": clear'
+# NNN Plugin
+export NNN_PLUG='f:fzcd;j:autojump;d:diffs;t:nmount;v:imgview'
 n ()
 {
   # Block nesting of nnn in subshells
@@ -162,37 +164,35 @@ n ()
   fi
 }
 
-# XDG Environment Variables
-export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_CACHE_HOME="$HOME/.cache"
-export XDG_DATA_HOME="$HOME/.local/share"
-export XDG_STATE_HOME="$HOME/.local/state"
+# HSTR configuration - add this to ~/.bashrc
+alias hh=hstr                    # hh to be alias for hstr
+export HSTR_CONFIG=hicolor       # get more colors
+shopt -s histappend              # append new history items to .bash_history
+export HISTCONTROL=ignorespace   # leading space hides commands from history
+export HISTFILESIZE=10000        # increase history file size (default is 500)
+export HISTSIZE=${HISTFILESIZE}  # increase history size (default is 500)
+# ensure synchronization between bash memory and history file
+export PROMPT_COMMAND="history -a; history -n; ${PROMPT_COMMAND}"
+function hstrnotiocsti {
+    { READLINE_LINE="$( { </dev/tty hstr ${READLINE_LINE}; } 2>&1 1>&3 3>&- )"; } 3>&1;
+    READLINE_POINT=${#READLINE_LINE}
+}
+# if this is interactive shell, then bind hstr to Ctrl-r (for Vi mode check doc)
+if [[ $- =~ .*i.* ]]; then bind -x '"\C-h": "hstrnotiocsti"'; fi
+export HSTR_TIOCSTI=n
 
-# Fcitx Environment Variables
-export QT_IM_MODULE=fcitx
-export XMODIFIERS=@im=fcitx
-
-
-# Software specific Environment Variables 
-export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
-export JAVA_HOME="/usr/lib/jvm/default-runtime"
-export GRADLE_USER_HOME="$XDG_DATA_HOME/gradle"
-export RBENV_ROOT="$XDG_DATA_HOME/rbenv"
 # eval "$($RBENV_ROOT/bin/rbenv init - bash)"
-export NVM_DIR="$HOME/.config/nvm"
+[[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-export NPM_CONFIG_USERCONFIG=$XDG_CONFIG_HOME/npm/npmrc
 
 # Alias
 alias open="xdg-open"
-alias nws="tmux new -t"
-alias ats="tmux a -t"
-alias fd="fdfind"
 alias activate=". ./.venv/bin/activate"
 
 alias reboot="systemctl reboot"
 alias poweroff="systemctl poweroff"
+export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
 
 ####
 # Things for wsl Arch
@@ -202,8 +202,6 @@ if [ -f /etc/wsl.conf ]; then
   export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
   export http_proxy="http://${hostip}:7890"
 	export https_proxy=$http_proxy
-	export HTTP_PROXY=$http_proxy
-	export HTTPS_PROXY=$http_proxy
   if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
     exec tmux
   fi
@@ -213,15 +211,6 @@ if [ -f /etc/wsl.conf ]; then
 ###
 else
 # Wayland settings
-# export MOZ_ENABLE_WAYLAND=1 firefox
-  export http_proxy=http://localhost:7890
-  export https_proxy=$http_proxy
-	export HTTP_PROXY=$http_proxy
-	export HTTPS_PROXY=$http_proxy
-  alias glados-update="
-    set +o noclobber 
-    curl https://update.glados-config.com/clash/182006/cf44d96/25175/glados-terminal.yaml > $XDG_DATA_HOME/clash/glados.yaml"
-
   if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [ "$XDG_CURRENT_DESKTOP" = Hyprland ]; then
     tmux
   fi
