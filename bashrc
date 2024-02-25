@@ -211,7 +211,7 @@ if [ -f /etc/wsl.conf ]; then
 ###
 else
 # Wayland settings
-  if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [ "$XDG_CURRENT_DESKTOP" = Hyprland ]; then
+  if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] ; then
     tmux
   fi
 fi
