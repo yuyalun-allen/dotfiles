@@ -11,6 +11,7 @@ set packpath+=$XDG_CONFIG_HOME/vim/after,$XDG_DATA_HOME/vim/after
 let g:netrw_home = $XDG_DATA_HOME."/vim"
 call mkdir($XDG_DATA_HOME."/vim/spell", 'p')
 
+set viminfo+=n$XDG_CACHE_HOME/vim/viminfo
 set backupdir=$XDG_STATE_HOME/vim/backup | call mkdir(&backupdir, 'p')
 set directory=$XDG_STATE_HOME/vim/swap   | call mkdir(&directory, 'p')
 set undodir=$XDG_STATE_HOME/vim/undo     | call mkdir(&undodir,   'p')
@@ -228,29 +229,20 @@ set pastetoggle=<F5>
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" =>Vundle Required
+" => LSP settings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" set shell=/bin/bash
-" filetype off
-" filetype plugin indent on
-" set rtp+=~/.vim/bundle/Vundle.vim
-" 
-" call vundle#begin()
-" Plugin 'VundleVim/Vundle.vim'
-" Plugin 'ycm-core/YouCompleteMe'
-" call vundle#end()
 
-" Settings for YCM
-" let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/.ycm_extra_conf.py'
-" set completeopt-=preview
-" nnoremap <leader>j :YcmCompleter GoTo<CR>
-" nmap <leader>fw <Plug>(YCMFindSymbolInWorkspace)
-" nmap <leader>fd <Plug>(YCMFindSymbolInDocument)
+" Fold action
+set foldmethod=expr
+  \ foldexpr=lsp#ui#vim#folding#foldexpr()
+  \ foldtext=lsp#ui#vim#folding#foldtext()
+let g:lsp_fold_enabled = 1
 
+" For asyncomplete
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
 
-" Environment
-set directory=$XDG_CACHE_HOME/vim,~/,/tmp
-set backupdir=$XDG_CACHE_HOME/vim,~/,/tmp
-set viminfo+=n$XDG_CACHE_HOME/vim/viminfo
-set runtimepath=$XDG_CONFIG_HOME/vim,$XDG_CONFIG_HOME/vim/after,$VIM,$VIMRUNTIME
-let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc"
+" Semantic highlight
+let g:lsp_semantic_enabled = 1
+nmap <leader>d :LspDefinition<cr>

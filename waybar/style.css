@@ -1,8 +1,7 @@
 * {
-    /* `otf-font-awesome` is required to be installed for icons */
     border: none;
     border-radius: 10;
-    font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
+    font-family: "CaskaydiaCove Nerd Font";
     font-size: 12px;
 }
 
@@ -169,7 +168,7 @@ button {
 /* https://github.com/Alexays/Waybar/wiki/FAQ#the-workspace-buttons-have-a-strange-hover-effect */
 button:hover {
     background: inherit;
-    box-shadow: inset 0 -3px #ffffff;
+    box-shadow: inset 0 -1px #ffffff;
 }
 
 #workspaces {
