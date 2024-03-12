@@ -194,25 +194,7 @@ alias reboot="systemctl reboot"
 alias poweroff="systemctl poweroff"
 export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
 
-####
-# Things for wsl Arch
-####
-if [ -f /etc/wsl.conf ]; then
-# Proxy settings
-  export hostip=$(cat /etc/resolv.conf |grep -oP '(?<=nameserver\ ).*')
-  export http_proxy="http://${hostip}:7890"
-	export https_proxy=$http_proxy
-  if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
-    exec tmux
-  fi
-
-###
-# Things for native Arch
-###
-else
-# Wayland settings
-  if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] ; then
-    tmux
-  fi
+if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] ; then
+tmux
 fi
 
