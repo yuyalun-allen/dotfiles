@@ -181,10 +181,15 @@ function hstrnotiocsti {
 if [[ $- =~ .*i.* ]]; then bind -x '"\C-h": "hstrnotiocsti"'; fi
 export HSTR_TIOCSTI=n
 
-# eval "$($RBENV_ROOT/bin/rbenv init - bash)"
+# Added by `rbenv init` on 2024年 08月 27日 星期二 17:52:28 CST
+eval "$($XDG_CONFIG_HOME/rbenv/bin/rbenv init - --no-rehash bash)"
+
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# nvm
+source /usr/share/nvm/nvm.sh
+source /usr/share/nvm/bash_completion
+source /usr/share/nvm/install-nvm-exec
 
 # Alias
 alias open="xdg-open"
@@ -194,7 +199,7 @@ alias reboot="systemctl reboot"
 alias poweroff="systemctl poweroff"
 export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
 
-if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] ; then
-tmux
+if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [[ "$TERM_PROGRAM" != "vscode" ]] ;then
+  exec tmux
 fi
 

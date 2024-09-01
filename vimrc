@@ -3,27 +3,25 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set runtimepath^=$XDG_CONFIG_HOME/vim
 set runtimepath+=$XDG_DATA_HOME/vim
-set runtimepath+=$XDG_CONFIG_HOME/vim/after
+set packpath^=$XDG_DATA_HOME/vim
 
-set packpath^=$XDG_DATA_HOME/vim,$XDG_CONFIG_HOME/vim
-set packpath+=$XDG_CONFIG_HOME/vim/after,$XDG_DATA_HOME/vim/after
 
 let g:netrw_home = $XDG_DATA_HOME."/vim"
 call mkdir($XDG_DATA_HOME."/vim/spell", 'p')
 
-set viminfo+=n$XDG_CACHE_HOME/vim/viminfo
+if !has('nvim') | set viminfofile=$XDG_STATE_HOME/vim/viminfo | endif
 set backupdir=$XDG_STATE_HOME/vim/backup | call mkdir(&backupdir, 'p')
 set directory=$XDG_STATE_HOME/vim/swap   | call mkdir(&directory, 'p')
 set undodir=$XDG_STATE_HOME/vim/undo     | call mkdir(&undodir,   'p')
 set viewdir=$XDG_STATE_HOME/vim/view     | call mkdir(&viewdir,   'p')
 
-if !has('nvim') | set viminfofile=$XDG_STATE_HOME/vim/viminfo | endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => General
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Sets how many lines of history VIM has to remember
 set history=500
+set updatetime=100
 
 " Enable filetype plugins
 filetype plugin on
@@ -38,7 +36,6 @@ set nomodeline
 
 " With a map leader it's possible to do extra key combinations
 " like <leader>w saves the current file
-let mapleader = ","
 let g:mapleader = ","
 
 " Fast saving
@@ -51,7 +48,7 @@ command W w !sudo tee % > /dev/null
 " Use system clipboard
 set clipboard+=unnamedplus
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => VIM user interface
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Set 7 lines to the cursor - when moving vertically using j/k
@@ -68,6 +65,8 @@ source $VIMRUNTIME/menu.vim
 
 " Show line number
 set number
+set relativenumber
+set laststatus=2
 " Turn on the WiLd menu
 set wildmenu
 
@@ -83,7 +82,7 @@ endif
 set ruler
 
 " Height of the command bar
-set cmdheight=2
+set cmdheight=1
 
 " A buffer becomes hidden when it is abandoned
 set hid
@@ -112,6 +111,7 @@ set magic
 
 " Show matching brackets when text indicator is over them
 set showmatch
+
 " How many tenths of a second to blink when matching brackets
 set mat=1
 
@@ -126,15 +126,15 @@ set foldcolumn=1
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Enable syntax highlighting
 syntax enable
-set background=dark
-colorscheme morning
-highlight Visual cterm=reverse ctermbg=NONE
+
+set t_Co=256
+set background=light
+colorscheme PaperColor
 
 " Set extra options when running in GUI mode
 if has("gui_running")
     set guioptions-=T
     set guioptions-=e
-    set t_Co=256
     set guitablabel=%M\ %t
 endif
 
@@ -163,7 +163,7 @@ set expandtab
 " Be smart when using tabs ;)
 set smarttab
 
-" 1 tab == 4 spaces
+" 1 tab == 2 spaces
 set shiftwidth=2
 set tabstop=2
 
@@ -187,8 +187,7 @@ vnoremap <silent> # :<C-u>call VisualSelection('', '')<CR>?<C-R>=@/<CR><CR>
 " => Moving around, tabs, windows and buffers
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Map <Space> to / (search) and Ctrl-<Space> to ? (backwards search)
-map <space> /
-map <c-space> ?
+map <space> ?
 
 " Disable highlight when <leader><cr> is pressed
 map <silent> <leader><cr> :noh<cr>
@@ -199,8 +198,10 @@ map <C-k> <C-W>k
 map <C-h> <C-W>h
 map <C-l> <C-W>l
 
+map <leader>b :ls<cr>
+
 " Close the current buffer
-map <leader>bd :Bclose<cr>:tabclose<cr>gT
+map <leader>bd :bclose<cr>:tabclose<cr>gT
 
 " Close all the buffers
 map <leader>ba :bufdo bd<cr>
@@ -212,8 +213,6 @@ map <leader>h :bprevious<cr>
 map <leader>tn :tabnew<cr>
 map <leader>to :tabonly<cr>
 map <leader>tc :tabclose<cr>
-map <leader>tm :tabmove
-map <leader>t<leader> :tabnext
 
 " Move a line of text using ALT+[jk] or Command+[jk] on mac
 execute "set <M-j>=\ej"
@@ -222,10 +221,15 @@ nmap <M-j> mz:m+<cr>`z
 nmap <M-k> mz:m-2<cr>`z
 vmap <M-k> :m'<-2<cr>`>my`<mzgv`yo`z
 vmap <M-j> :m'>+<cr>`<my`>mzgv`yo`z
+nnoremap <C-w>x <C-w>c
 
 " Customizing
-command! VB normal! <C-v>
-set pastetoggle=<F5>
+set pastetoggle=<F10>
+nmap <C-p> :Clap tagfiles<CR> 
+nmap <leader>p :Clap<CR> 
+" Specify this variable to enable the plugin feature.
+let g:clap_plugin_experimental = v:true
+hi ClapCurrentSelection gui=bold guibg=#7a804d guifg=black
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -233,10 +237,9 @@ set pastetoggle=<F5>
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 " Fold action
-set foldmethod=expr
-  \ foldexpr=lsp#ui#vim#folding#foldexpr()
-  \ foldtext=lsp#ui#vim#folding#foldtext()
-let g:lsp_fold_enabled = 1
+" set foldmethod=expr
+"   \ foldexpr=lsp#ui#vim#folding#foldexpr()
+"   \ foldtext=lsp#ui#vim#folding#foldtext()
 
 " For asyncomplete
 inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
@@ -245,4 +248,19 @@ inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
 
 " Semantic highlight
 let g:lsp_semantic_enabled = 1
-nmap <leader>d :LspDefinition<cr>
+nnoremap gd :LspDefinition<cr>
+nnoremap gD :LspDeclaration<cr>
+nnoremap gi :LspImplementation<cr>
+nnoremap gr :LspReferences<cr>
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Semantic highlighting
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+let g:lsp_settings = {
+  \ 'clangd': {
+  \   'semantic_highlighting': {
+  \     'Function': 'Function',
+  \     'Variable': 'Variable'
+  \ }}}
+

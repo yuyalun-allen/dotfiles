@@ -4,7 +4,7 @@
     "workbench.startupEditor": "none",
 
     "editor.fontSize": 18,
-    "editor.fontWeight": "500",
+    "editor.fontWeight": "bold",
     "debug.console.fontSize": 17,
     "editor.fontLigatures": false,
     "editor.fontFamily": "CaskaydiaCove Nerd Font, Noto Serif SC, Consolas, 'Courier New', monospace",
@@ -47,4 +47,17 @@
         "*.gif": "default"
     },
     "redhat.telemetry.enabled": true,
+    "jupyter.askForKernelRestart": false,
+    "window.titleBarStyle": "custom",
+    "explorer.confirmDragAndDrop": false,
+    "python.analysis.inlayHints.pytestParameters": true,
+    "python.analysis.inlayHints.callArgumentNames": "all",
+    "python.analysis.inlayHints.variableTypes": true,
+    "javascript.inlayHints.enumMemberValues.enabled": true,
+    "javascript.inlayHints.functionLikeReturnTypes.enabled": true,
+    "python.analysis.inlayHints.functionReturnTypes": true,
+    "github.copilot.editor.enableAutoCompletions": true,
+    "cmake.showOptionsMovedNotification": false,
+    "java.configuration.maven.userSettings": "/home/allen/.m2/settings.xml",
+    "makefile.configureOnOpen": true,
 }
