@@ -3,18 +3,21 @@
     "workbench.colorTheme": "Quiet Light",
     "workbench.startupEditor": "none",
 
+    "editor.fontFamily": "CaskaydiaCove Nerd Font, Noto Serif SC, Consolas",
     "editor.fontSize": 18,
     "editor.fontWeight": "bold",
+    "terminal.integrated.fontSize": 17,
     "debug.console.fontSize": 17,
     "editor.fontLigatures": false,
-    "editor.fontFamily": "CaskaydiaCove Nerd Font, Noto Serif SC, Consolas, 'Courier New', monospace",
+
     "editor.cursorSurroundingLines": 10,
     "editor.largeFileOptimizations": false,
     "editor.inlineSuggest.enabled": true,
-
-    "terminal.integrated.fontSize": 17,
+    
     "keyboard.dispatch": "keyCode",
+    "window.titleBarStyle": "custom",
     "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
 
     // For Vim Extension
     "vim.easymotion": true,
@@ -42,14 +45,10 @@
         }
     ],
     "editor.wordWrap": "off",
-    "workbench.editorAssociations": {
-        "*.pdf": "cweijan.officeViewer",
-        "*.gif": "default"
-    },
+
+    // For Language Extensions
     "redhat.telemetry.enabled": true,
     "jupyter.askForKernelRestart": false,
-    "window.titleBarStyle": "custom",
-    "explorer.confirmDragAndDrop": false,
     "python.analysis.inlayHints.pytestParameters": true,
     "python.analysis.inlayHints.callArgumentNames": "all",
     "python.analysis.inlayHints.variableTypes": true,

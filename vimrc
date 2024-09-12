@@ -121,6 +121,30 @@ set noerrorbells visualbell t_vb=
 " Add a bit extra margin to the left
 set foldcolumn=1
 
+" 跳转到下一个空行
+function! JumpToNextBlankLine()
+    let save_pos = getpos(".")
+    if search('^\s*$', 'W')
+    else
+        call setpos('.', save_pos)
+        echo "No more blank lines"
+    endif
+endfunction
+
+" 跳转到上一个空行
+function! JumpToPrevBlankLine()
+    let save_pos = getpos(".")
+    if search('^\s*$', 'bW')
+    else
+        call setpos('.', save_pos)
+        echo "No more blank lines"
+    endif
+endfunction
+
+" quick jump to next/prev blank line
+nnoremap ]<Space> :call JumpToNextBlankLine()<CR>
+nnoremap [<Space> :call JumpToPrevBlankLine()<CR>
+
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Colors and Fonts
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -180,9 +204,26 @@ set wrap "Wrap lines
 """"""""""""""""""""""""""""""
 " Visual mode pressing * or # searches for the current selection
 " Super useful! From an idea by Michael Naumann
-vnoremap <silent> * :<C-u>call VisualSelection('', '')<CR>/<C-R>=@/<CR><CR>
-vnoremap <silent> # :<C-u>call VisualSelection('', '')<CR>?<C-R>=@/<CR><CR>
+" In visual mode when you press * or # to search for the current selection
+vnoremap <silent> * :call VisualSearch('f')<CR>
+vnoremap <silent> # :call VisualSearch('b')<CR>
 
+function! VisualSearch(direction) range
+    let l:saved_reg = @"
+    execute "normal! vgvy"
+
+    let l:pattern = escape(@", "\/.*'$^~[]")
+    let l:pattern = substitute(l:pattern, "\n$", "", "")
+
+    if a:direction == 'b'
+        execute "normal ?" . l:pattern . "\<CR>"
+    else
+        execute "normal /" . l:pattern . "\<CR>"
+    endif
+
+    let @/ = l:pattern
+    let @" = l:saved_reg
+endfunction
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Moving around, tabs, windows and buffers
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -225,11 +266,21 @@ nnoremap <C-w>x <C-w>c
 
 " Customizing
 set pastetoggle=<F10>
-nmap <C-p> :Clap tagfiles<CR> 
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Clap settings
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+hi ClapCurrentSelection gui=bold guibg=#7a804d guifg=black
+
+nmap <C-p> :Clap tags<CR> 
 nmap <leader>p :Clap<CR> 
 " Specify this variable to enable the plugin feature.
 let g:clap_plugin_experimental = v:true
-hi ClapCurrentSelection gui=bold guibg=#7a804d guifg=black
+augroup TreeSitterHighlight
+    autocmd!
+    autocmd FileType python,go ClapAction syntax.treeSitterHighlight
+augroup END
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -246,16 +297,18 @@ inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
 
-" Semantic highlight
 let g:lsp_semantic_enabled = 1
 nnoremap gd :LspDefinition<cr>
 nnoremap gD :LspDeclaration<cr>
 nnoremap gi :LspImplementation<cr>
 nnoremap gr :LspReferences<cr>
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => Semantic highlighting
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:lsp_log_verbose = 1
+let g:lsp_log_file = expand('/tmp/vim-lsp.log')
+nnoremap <leader>sl :split /tmp/vim-lsp.log<CR>
+
+
+" Semantic highlight
 
 let g:lsp_settings = {
   \ 'clangd': {
@@ -264,3 +317,8 @@ let g:lsp_settings = {
   \     'Variable': 'Variable'
   \ }}}
 
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => NNN settings
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+let g:nnn#replace_netrw = 1

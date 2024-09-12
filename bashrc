@@ -203,3 +203,5 @@ if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] &&
   exec tmux
 fi
 
+# Add path for user defined applications
+export PATH=$PATH:~/Applications/bin
