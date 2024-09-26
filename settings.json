@@ -57,6 +57,6 @@
     "python.analysis.inlayHints.functionReturnTypes": true,
     "github.copilot.editor.enableAutoCompletions": true,
     "cmake.showOptionsMovedNotification": false,
-    "java.configuration.maven.userSettings": "/home/allen/.m2/settings.xml",
+    "java.configuration.maven.userSettings": "/home/allen/.config/maven/settings.xml",
     "makefile.configureOnOpen": true,
 }

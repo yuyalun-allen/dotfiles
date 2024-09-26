@@ -132,7 +132,7 @@ source "$OSH"/oh-my-bash.sh
 set -o vi
 bind -x '"\C-l": clear'
 # NNN Plugin
-export NNN_PLUG='f:fzcd;j:autojump;d:diffs;t:nmount;v:imgview'
+export NNN_PLUG='c:-!echo $PWD/$nnn|wl-copy*;f:fzcd;j:autojump;d:diffs;t:nmount;v:imgview'
 n ()
 {
   # Block nesting of nnn in subshells
@@ -182,14 +182,18 @@ if [[ $- =~ .*i.* ]]; then bind -x '"\C-h": "hstrnotiocsti"'; fi
 export HSTR_TIOCSTI=n
 
 # Added by `rbenv init` on 2024年 08月 27日 星期二 17:52:28 CST
-eval "$($XDG_CONFIG_HOME/rbenv/bin/rbenv init - --no-rehash bash)"
+if [ -d "$XDG_CONFIG_HOME/rbenv/bin/" ]; then
+  eval "$($XDG_CONFIG_HOME/rbenv/bin/rbenv init - --no-rehash bash)"
+fi
 
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
 
 # nvm
-source /usr/share/nvm/nvm.sh
-source /usr/share/nvm/bash_completion
-source /usr/share/nvm/install-nvm-exec
+if [ -d "/usr/share/nvm" ]; then
+  source /usr/share/nvm/nvm.sh
+  source /usr/share/nvm/bash_completion
+  source /usr/share/nvm/install-nvm-exec
+fi
 
 # Alias
 alias open="xdg-open"
@@ -197,11 +201,19 @@ alias activate=". ./.venv/bin/activate"
 
 alias reboot="systemctl reboot"
 alias poweroff="systemctl poweroff"
-export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
+
 
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [[ "$TERM_PROGRAM" != "vscode" ]] ;then
   exec tmux
 fi
 
+# Set up vim
+export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
+# Set up maven
+export MAVEN_OPTS=-Dmaven.repo.local="$XDG_DATA_HOME"/maven/repository
 # Add path for user defined applications
 export PATH=$PATH:~/Applications/bin
+# Add path for proton
+export PATH=$PATH:/usr/share/steam/compatibilitytools.d/proton
+# Add path for go
+export PATH=$PATH:$GOPATH/bin

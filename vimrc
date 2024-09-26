@@ -321,4 +321,4 @@ let g:lsp_settings = {
 " => NNN settings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-let g:nnn#replace_netrw = 1
+" let g:nnn#replace_netrw = 1
