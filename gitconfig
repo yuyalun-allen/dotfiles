@@ -5,6 +5,7 @@
 	excludesfile = /home/allen/.gitigore_global
 	editor = /usr/bin/vim
 	ignorecase = false
+	quotepath = false
 [push]
 	default = current
 [init]

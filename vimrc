@@ -273,8 +273,7 @@ set pastetoggle=<F10>
 
 hi ClapCurrentSelection gui=bold guibg=#7a804d guifg=black
 
-nmap <C-p> :Clap tags<CR> 
-nmap <leader>p :Clap<CR> 
+nmap <C-p> :Clap<CR> 
 " Specify this variable to enable the plugin feature.
 let g:clap_plugin_experimental = v:true
 augroup TreeSitterHighlight
