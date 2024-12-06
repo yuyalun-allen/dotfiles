@@ -11,7 +11,7 @@
     "editor.fontLigatures": false,
 
     "editor.cursorSurroundingLines": 10,
-    "editor.largeFileOptimizations": false,
+    "editor.largeFileOptimizations": true,
     "editor.inlineSuggest.enabled": true,
     
     "keyboard.dispatch": "keyCode",
@@ -23,10 +23,10 @@
     "vim.easymotion": true,
     "vim.incsearch": true,
     "vim.useSystemClipboard": true,
-    "vim.useCtrlKeys": true,
     "vim.hlsearch": true,
     "vim.leader": ",",
     "vim.whichwrap": "h,l",
+    "vim.useCtrlKeys": true,
     "vim.handleKeys": {
         "<C-a>": false,
         "<C-f>": false,
@@ -42,7 +42,19 @@
         {
             "before": ["leader", "<cr>"],
             "commands": [":nohl"]
-        }
+        },
+        {
+            "before": ["g", "r"],
+            "commands": [
+                "editor.action.goToReferences",
+            ]
+        },
+        {
+            "before": ["g", "d"],
+            "commands": [
+                "editor.action.revealDefinition",
+            ]
+        },
     ],
     "editor.wordWrap": "off",
 
@@ -59,4 +71,9 @@
     "cmake.showOptionsMovedNotification": false,
     "java.configuration.maven.userSettings": "/home/allen/.config/maven/settings.xml",
     "makefile.configureOnOpen": true,
+    "workbench.editorAssociations": {
+        "*.copilotmd": "vscode.markdown.preview.editor",
+        "{git,gitlens,git-graph}:/**/*.{md,csv,svg}": "default"
+    },
+    "git.openRepositoryInParentFolders": "always",
 }

@@ -22,6 +22,7 @@ set viewdir=$XDG_STATE_HOME/vim/view     | call mkdir(&viewdir,   'p')
 " Sets how many lines of history VIM has to remember
 set history=500
 set updatetime=100
+set termguicolors
 
 " Enable filetype plugins
 filetype plugin on
@@ -40,6 +41,9 @@ let g:mapleader = ","
 
 " Fast saving
 nmap <leader>w :w!<cr>
+
+" Fast command
+nmap ! :!
 
 " :W sudo saves the file 
 " (useful for handling the permission-denied error)
@@ -268,6 +272,12 @@ nnoremap <C-w>x <C-w>c
 set pastetoggle=<F10>
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => ALE settings
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+nmap <leader>d :ALEDetail<CR>
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Clap settings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -275,10 +285,19 @@ hi ClapCurrentSelection gui=bold guibg=#7a804d guifg=black
 
 nmap <C-p> :Clap<CR> 
 " Specify this variable to enable the plugin feature.
-let g:clap_plugin_experimental = v:true
-augroup TreeSitterHighlight
+ let g:clap_plugin_experimental = v:true
+ augroup TreeSitterHighlight
+     autocmd!
+     autocmd FileType python,go ClapAction syntax.treeSitterHighlight
+ augroup END
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Copilot settings
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+augroup DisableCopilot
     autocmd!
-    autocmd FileType python,go ClapAction syntax.treeSitterHighlight
+    autocmd FileType markdown execute 'Copilot disable'
 augroup END
 
 
@@ -309,6 +328,7 @@ nnoremap <leader>sl :split /tmp/vim-lsp.log<CR>
 
 " Semantic highlight
 
+let python_highlight_all = 1
 let g:lsp_settings = {
   \ 'clangd': {
   \   'semantic_highlighting': {
@@ -317,7 +337,23 @@ let g:lsp_settings = {
   \ }}}
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => NNN settings
+" => For nvim
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-" let g:nnn#replace_netrw = 1
+" lua << EOF
+" require'nvim-treesitter.configs'.setup {
+"   ensure_installed = "python",  -- Add any other languages you want here
+"   highlight = {
+"     enable = true,              -- Enable Tree-sitter syntax highlighting
+"     additional_vim_regex_highlighting = false,  -- Disable default Vim regex highlighting
+"   },
+" }
+" EOF
+"
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => For image pasting
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+autocmd FileType markdown,tex nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
+
