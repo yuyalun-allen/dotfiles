@@ -208,8 +208,8 @@ if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] &&
 fi
 
 # Set up proxy
-export http_proxy="http://localhost:7890"
-export https_proxy=$http_proxy
+# export http_proxy="http://localhost:7890"
+# export https_proxy=$http_proxy
 # Set up vim
 export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
 # Set up maven
