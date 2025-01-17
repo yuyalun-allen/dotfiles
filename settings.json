@@ -76,4 +76,5 @@
         "{git,gitlens,git-graph}:/**/*.{md,csv,svg}": "default"
     },
     "git.openRepositoryInParentFolders": "always",
+    "haskell.manageHLS": "GHCup",
 }
