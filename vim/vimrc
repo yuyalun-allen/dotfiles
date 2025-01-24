@@ -1,20 +1,16 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Environment
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-set runtimepath^=$XDG_CONFIG_HOME/vim
 set runtimepath+=$XDG_DATA_HOME/vim
 set packpath^=$XDG_DATA_HOME/vim
-
-
-let g:netrw_home = $XDG_DATA_HOME."/vim"
-call mkdir($XDG_DATA_HOME."/vim/spell", 'p')
-
-if !has('nvim') | set viminfofile=$XDG_STATE_HOME/vim/viminfo | endif
 set backupdir=$XDG_STATE_HOME/vim/backup | call mkdir(&backupdir, 'p')
 set directory=$XDG_STATE_HOME/vim/swap   | call mkdir(&directory, 'p')
 set undodir=$XDG_STATE_HOME/vim/undo     | call mkdir(&undodir,   'p')
 set viewdir=$XDG_STATE_HOME/vim/view     | call mkdir(&viewdir,   'p')
 
+let g:netrw_home = $XDG_DATA_HOME."/vim"
+
+if !has('nvim') | set viminfofile=$XDG_STATE_HOME/vim/viminfo | endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => General
@@ -304,6 +300,70 @@ augroup END
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => LSP settings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Register LS
+if executable('pyright-langserver')
+    augroup lsp_pyright
+        autocmd!
+        autocmd User lsp_setup call lsp#register_server({
+            \ 'name': 'pyright',
+            \ 'cmd': {server_info->['pyright-langserver', '--stdio']},
+            \ 'whitelist': ['python'],
+            \ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'pyproject.toml'))},
+            \ 'workspace_config': {
+            \   'python': {
+            \     'analysis': {
+            \       'typeCheckingMode': 'basic'
+            \     }
+            \   }
+            \ }
+            \ })
+    augroup END
+endif
+
+if executable('clangd')
+    augroup lsp_clangd
+        autocmd!
+        autocmd User lsp_setup call lsp#register_server({
+            \ 'name': 'clangd',
+            \ 'cmd': {server_info->['clangd']},
+            \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp'],
+            \ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'compile_commands.json'))},
+            \ 'workspace_config': {
+            \   'clangd': {
+            \     'fallbackFlags': ['-std=c++17']
+            \   }
+            \ }
+            \ })
+    augroup END
+endif
+" Key mappings
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=yes
+    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+    nmap <buffer> gd <plug>(lsp-definition)
+    nmap <buffer> gs <plug>(lsp-document-symbol-search)
+    nmap <buffer> gS <plug>(lsp-workspace-symbol-search)
+    nmap <buffer> gr <plug>(lsp-references)
+    nmap <buffer> gi <plug>(lsp-implementation)
+    nmap <buffer> gt <plug>(lsp-type-definition)
+    nmap <buffer> <leader>rn <plug>(lsp-rename)
+    nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+    nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+    nmap <buffer> K <plug>(lsp-hover)
+
+    let g:lsp_format_sync_timeout = 1000
+    autocmd! BufWritePre *.rs,*.go call execute('LspDocumentFormatSync')
+    
+    " refer to doc to add more commands
+endfunction
+
+augroup lsp_install
+    au!
+    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
 
 " Fold action
 " set foldmethod=expr
@@ -316,19 +376,14 @@ inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
 
 let g:lsp_semantic_enabled = 1
-nnoremap gd :LspDefinition<cr>
-nnoremap gD :LspDeclaration<cr>
-nnoremap gi :LspImplementation<cr>
-nnoremap gr :LspReferences<cr>
 
-let g:lsp_log_verbose = 1
-let g:lsp_log_file = expand('/tmp/vim-lsp.log')
-nnoremap <leader>sl :split /tmp/vim-lsp.log<CR>
+" let g:lsp_log_verbose = 1
+" let g:lsp_log_file = expand('/tmp/vim-lsp.log')
+" nnoremap <leader>sl :split /tmp/vim-lsp.log<CR>
 
 
 " Semantic highlight
 
-let python_highlight_all = 1
 let g:lsp_settings = {
   \ 'clangd': {
   \   'semantic_highlighting': {
@@ -337,22 +392,7 @@ let g:lsp_settings = {
   \ }}}
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => For nvim
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-" lua << EOF
-" require'nvim-treesitter.configs'.setup {
-"   ensure_installed = "python",  -- Add any other languages you want here
-"   highlight = {
-"     enable = true,              -- Enable Tree-sitter syntax highlighting
-"     additional_vim_regex_highlighting = false,  -- Disable default Vim regex highlighting
-"   },
-" }
-" EOF
-"
-
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => For image pasting
+" => For markdown image pasting
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 autocmd FileType markdown,tex nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
