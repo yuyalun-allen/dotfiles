@@ -333,6 +333,26 @@ if executable('clangd')
             \ })
     augroup END
 endif
+
+if executable('rust-analyzer')
+    augroup lsp_rust
+        autocmd!
+        autocmd User lsp_setup call lsp#register_server({
+            \ 'name': 'rust-analyzer',
+            \ 'cmd': {server_info->['rust-analyzer']},
+            \ 'whitelist': ['rust'],
+            \ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'Cargo.toml'))},
+            \ 'workspace_config': {
+            \   'rust-analyzer': {
+            \     'checkOnSave': {
+            \       'command': 'clippy'
+            \     }
+            \   }
+            \ }
+            \ })
+    augroup END
+endif
+
 " Key mappings
 
 function! s:on_lsp_buffer_enabled() abort
@@ -344,11 +364,14 @@ function! s:on_lsp_buffer_enabled() abort
     nmap <buffer> gS <plug>(lsp-workspace-symbol-search)
     nmap <buffer> gr <plug>(lsp-references)
     nmap <buffer> gi <plug>(lsp-implementation)
-    nmap <buffer> gt <plug>(lsp-type-definition)
+    nmap <buffer> gD <plug>(lsp-type-definition)
+    nmap <buffer> <leader>fx <plug>(lsp-code-action)
     nmap <buffer> <leader>rn <plug>(lsp-rename)
     nmap <buffer> [g <plug>(lsp-previous-diagnostic)
     nmap <buffer> ]g <plug>(lsp-next-diagnostic)
     nmap <buffer> K <plug>(lsp-hover)
+    nnoremap <buffer> <expr><c-f> lsp#scroll(+4)
+    nnoremap <buffer> <expr><c-b> lsp#scroll(-4)
 
     let g:lsp_format_sync_timeout = 1000
     autocmd! BufWritePre *.rs,*.go call execute('LspDocumentFormatSync')
