@@ -291,10 +291,7 @@ nmap <C-p> :Clap<CR>
 " => Copilot settings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-augroup DisableCopilot
-    autocmd!
-    autocmd FileType markdown execute 'Copilot disable'
-augroup END
+let g:copilot_enabled = v:false
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
