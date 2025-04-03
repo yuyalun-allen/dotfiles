@@ -38,5 +38,3 @@ fi
 if [ -d "$HOME/.local/share/cargo/env" ] ; then
     PATH="$HOME/.local/share/cargo/env:$PATH"
 fi
-
-fish
