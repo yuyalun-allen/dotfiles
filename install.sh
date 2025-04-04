@@ -20,7 +20,7 @@ ln -sf "$DOTFILES_DIR/profile" "$HOME/.profile"
 
 # Applications/bin
 mkdir -p "$HOME/Applications/bin"
-ln -sf "$DOTFILES_DIR/Applications/bin/chat" "$HOME/Applications/bin/chat"
+ln -sf "$DOTFILES_DIR/Applications/bin/chat.py" "$HOME/Applications/bin/chat"
 
 # fish
 mkdir -p "$XDG_CONFIG_HOME/fish"
