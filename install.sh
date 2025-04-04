@@ -18,6 +18,10 @@ ln -sf "$DOTFILES_DIR/bash_profile" "$HOME/.bash_profile"
 ln -sf "$DOTFILES_DIR/bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/profile" "$HOME/.profile"
 
+# Applications/bin
+mkdir -p "$HOME/Applications/bin"
+ln -sf "$DOTFILES_DIR/Applications/bin/chat" "$HOME/Applications/bin/chat"
+
 # fish
 mkdir -p "$XDG_CONFIG_HOME/fish"
 ln -sf "$DOTFILES_DIR/fish/config.fish" "$XDG_CONFIG_HOME/fish/config.fish"
@@ -76,5 +80,3 @@ mkdir -p "$XDG_CONFIG_HOME/Code/User"
 ln -sf "$DOTFILES_DIR/vscode/settings.json" "$XDG_CONFIG_HOME/Code/User/settings.json"
 
 echo "Dotfiles successfully linked to XDG directories."
-
-
