@@ -23,6 +23,10 @@ mkdir -p "$HOME/Applications/bin"
 ln -sf "$DOTFILES_DIR/Applications/bin/chat.py" "$HOME/Applications/bin/chat"
 
 # fish
+mkdir -p "$XDG_CONFIG_HOME/gdb"
+ln -sf "$DOTFILES_DIR/gdb/gdbinit" "$XDG_CONFIG_HOME/gdb/gdbinit"
+
+# fish
 mkdir -p "$XDG_CONFIG_HOME/fish"
 ln -sf "$DOTFILES_DIR/fish/config.fish" "$XDG_CONFIG_HOME/fish/config.fish"
 

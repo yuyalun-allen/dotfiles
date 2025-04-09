@@ -2,8 +2,8 @@
 	name = allen
 	email = yuyalun.allen@gmail.com
 [core]
-	excludesfile = /home/allen/.gitigore_global
-	editor = /usr/bin/vim
+	excludesfile = ~/.gitigore_global
+	editor = vim
 #  pager = delta
 	ignorecase = false
 	quotepath = false

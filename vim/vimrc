@@ -273,6 +273,7 @@ set pastetoggle=<F10>
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 nmap <leader>d :ALEDetail<CR>
+let g:ale_completion_autoimport = 0
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Clap settings

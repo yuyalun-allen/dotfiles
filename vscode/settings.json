@@ -77,4 +77,5 @@
     },
     "git.openRepositoryInParentFolders": "always",
     "haskell.manageHLS": "GHCup",
+    "go.toolsManagement.autoUpdate": true,
 }
