@@ -14,6 +14,7 @@ mkdir -p "$XDG_DATA_HOME"
 # 3. 创建目标目录并创建软链接
 
 # shell
+export OSH="$XDG_CONFIG_HOME/oh-my-bash"; bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)"
 ln -sf "$DOTFILES_DIR/bash_profile" "$HOME/.bash_profile"
 ln -sf "$DOTFILES_DIR/bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/profile" "$HOME/.profile"
