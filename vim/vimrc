@@ -298,6 +298,7 @@ let g:copilot_enabled = v:false
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => LSP settings
+            \ 'cmd': {server_info->['ty', 'server']},
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Register LS
 if executable('pyright-langserver')
@@ -355,6 +356,44 @@ if executable('rust-analyzer')
     augroup END
 endif
 
+" Register gopls with vim-lsp
+if executable('gopls')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'gopls',
+        \ 'cmd': {server_info->['gopls']},
+        \ 'allowlist': ['go'],
+        \ 'workspace_config': {
+        \     'gopls': {
+        \         'staticcheck': v:true,
+        \         'completeUnimported': v:true,
+        \         'usePlaceholders': v:true,
+        \         'analyses': {
+        \             'unusedparams': v:true,
+        \             'shadow': v:true,
+        \         },
+        \         'gofumpt': v:true,
+        \     },
+        \ },
+        \ 'initialization_options': {
+        \     'gofumpt': v:true,
+        \ }
+        \ })
+endif
+
+if executable('ruby-lsp')
+  au User lsp_setup call lsp#register_server({
+    \ 'name': 'ruby-lsp',
+    \ 'cmd': {server_info->['ruby-lsp']},
+    \ 'allowlist': ['ruby'],
+    \ 'workspace_config': {
+    \   'ruby-lsp': {
+    \     'formatter': 'rubocop',
+    \     'diagnostics': 'true',
+    \   }
+    \ }
+    \ })
+endif
+
 " Key mappings
 
 function! s:on_lsp_buffer_enabled() abort
@@ -388,9 +427,9 @@ augroup lsp_install
 augroup END
 
 " Fold action
-" set foldmethod=expr
-"   \ foldexpr=lsp#ui#vim#folding#foldexpr()
-"   \ foldtext=lsp#ui#vim#folding#foldtext()
+set foldmethod=expr
+  \ foldexpr=lsp#ui#vim#folding#foldexpr()
+  \ foldtext=lsp#ui#vim#folding#foldtext()
 
 " For asyncomplete
 inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"

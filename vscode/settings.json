@@ -67,15 +67,20 @@
     "javascript.inlayHints.enumMemberValues.enabled": true,
     "javascript.inlayHints.functionLikeReturnTypes.enabled": true,
     "python.analysis.inlayHints.functionReturnTypes": true,
-    "github.copilot.editor.enableAutoCompletions": true,
+    "github.copilot.enable": {
+        "enabled": true
+    },
     "cmake.showOptionsMovedNotification": false,
     "java.configuration.maven.userSettings": "/home/allen/.config/maven/settings.xml",
     "makefile.configureOnOpen": true,
     "workbench.editorAssociations": {
         "*.copilotmd": "vscode.markdown.preview.editor",
-        "{git,gitlens,git-graph}:/**/*.{md,csv,svg}": "default"
+        "{hexdiff}:/**/*.*": "hexEditor.hexedit",
+        "*.md": "default",
+        "*.markdown": "default"
     },
     "git.openRepositoryInParentFolders": "always",
     "haskell.manageHLS": "GHCup",
     "go.toolsManagement.autoUpdate": true,
+    "C_Cpp.intelliSenseEngine": "disabled",
 }

@@ -182,9 +182,7 @@ if [[ $- =~ .*i.* ]]; then bind -x '"\C-h": "hstrnotiocsti"'; fi
 export HSTR_TIOCSTI=n
 
 # Added by `rbenv init` on 2024年 08月 27日 星期二 17:52:28 CST
-if [ -d "$XDG_CONFIG_HOME/rbenv/bin/" ]; then
-  eval "$($XDG_CONFIG_HOME/rbenv/bin/rbenv init - --no-rehash bash)"
-fi
+eval "$(rbenv init - --no-rehash bash)"
 
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
 

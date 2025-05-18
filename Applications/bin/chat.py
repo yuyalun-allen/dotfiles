@@ -36,7 +36,8 @@ def chat_stream(messages, type):
     model = ""
     match type:
         case 'normal':
-            model = "deepseek-v3"
+            model = "qwen-max-0428"
+#            model = "qwen-max-latest"
         case 'reason':
             model = "deepseek-r1"
         case 'small':
