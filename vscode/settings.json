@@ -83,4 +83,6 @@
     "haskell.manageHLS": "GHCup",
     "go.toolsManagement.autoUpdate": true,
     "C_Cpp.intelliSenseEngine": "disabled",
+    "python.analysis.typeCheckingMode": "basic",
+    "github.copilot.nextEditSuggestions.enabled": true,
 }
