@@ -27,7 +27,7 @@ ln -sf "$DOTFILES_DIR/Applications/bin/chat.py" "$HOME/Applications/bin/chat"
 mkdir -p "$XDG_CONFIG_HOME/gdb"
 ln -sf "$DOTFILES_DIR/gdb/gdbinit" "$XDG_CONFIG_HOME/gdb/gdbinit"
 
-# gdb
+# maven
 mkdir -p "$XDG_CONFIG_HOME/maven"
 ln -sf "$DOTFILES_DIR/maven/settings.xml" "$XDG_CONFIG_HOME/maven/settings.xml"
 
@@ -90,5 +90,6 @@ ln -sf "$DOTFILES_DIR/waybar/style.css" "$XDG_CONFIG_HOME/waybar/style.css"
 # vscode
 mkdir -p "$XDG_CONFIG_HOME/Code/User"
 ln -sf "$DOTFILES_DIR/vscode/settings.json" "$XDG_CONFIG_HOME/Code/User/settings.json"
+ln -sf "$DOTFILES_DIR/vscode/code-flags.conf" "$XDG_CONFIG_HOME/code-flags.conf"
 
 echo "Dotfiles successfully linked to XDG directories."
