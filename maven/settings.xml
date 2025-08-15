@@ -1,0 +1,32 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <localRepository>${user.home}/.local/share/maven/repository</localRepository>
+  <proxies>
+    <proxy>
+      <id>my-http-proxy</id>
+      <active>true</active>
+      <protocol>http</protocol>
+      <host>localhost</host>
+      <port>7890</port>
+      <nonProxyHosts>localhost|127.*|*.somecompany.com</nonProxyHosts>
+    </proxy>
+
+    <proxy>
+      <id>my-https-proxy</id>
+      <active>true</active>
+      <protocol>https</protocol>
+      <host>localhost</host>
+      <port>7890</port>
+      <nonProxyHosts>localhost|127.*|*.anothercompany.com</nonProxyHosts>
+    </proxy>
+  </proxies>
+
+  <mirrors>
+    <mirror>
+      <id>aliyunmaven</id>
+      <mirrorOf>central</mirrorOf>
+      <name>阿里云公共仓库</name>
+      <url>https://maven.aliyun.com/repository/public</url>
+    </mirror>
+  </mirrors>
+</settings>

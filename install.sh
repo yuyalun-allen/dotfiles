@@ -23,9 +23,13 @@ ln -sf "$DOTFILES_DIR/profile" "$HOME/.profile"
 mkdir -p "$HOME/Applications/bin"
 ln -sf "$DOTFILES_DIR/Applications/bin/chat.py" "$HOME/Applications/bin/chat"
 
-# fish
+# gdb
 mkdir -p "$XDG_CONFIG_HOME/gdb"
 ln -sf "$DOTFILES_DIR/gdb/gdbinit" "$XDG_CONFIG_HOME/gdb/gdbinit"
+
+# gdb
+mkdir -p "$XDG_CONFIG_HOME/maven"
+ln -sf "$DOTFILES_DIR/maven/settings.xml" "$XDG_CONFIG_HOME/maven/settings.xml"
 
 # fish
 mkdir -p "$XDG_CONFIG_HOME/fish"
