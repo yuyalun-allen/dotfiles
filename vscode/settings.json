@@ -85,4 +85,28 @@
     "C_Cpp.intelliSenseEngine": "disabled",
     "python.analysis.typeCheckingMode": "basic",
     "github.copilot.nextEditSuggestions.enabled": true,
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "zsh",
+            "icon": "terminal-bash"
+        },
+        "zsh": {
+            "path": "zsh"
+        },
+        "fish": {
+            "path": "fish"
+        },
+        "tmux": {
+            "path": "tmux",
+            "icon": "terminal-tmux"
+        },
+        "pwsh": {
+            "path": "pwsh",
+            "icon": "terminal-powershell"
+        },
+        "sh": {
+            "path": "/bin/sh"
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "sh",
 }

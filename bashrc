@@ -104,7 +104,7 @@ source "$OSH"/oh-my-bash.sh
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
-# export LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
@@ -192,6 +192,9 @@ if [ -d "/usr/share/nvm" ]; then
   source /usr/share/nvm/bash_completion
 fi
 
+export http_proxy=http://localhost:7890
+export https_proxy=http://localhost:7890
+
 # Alias
 alias open="xdg-open"
 alias activate=". ./.venv/bin/activate"
@@ -199,9 +202,14 @@ alias activate=". ./.venv/bin/activate"
 alias reboot="systemctl reboot"
 alias poweroff="systemctl poweroff"
 
+alias todo="pushd $HOME/Documents/private && vim TODO.md"
+
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [[ "$TERM_PROGRAM" != "vscode" ]] ;then
   exec tmux
 fi
 
-neofetch
+# In bashrc
+bind 'TAB: menu-complete'
+bind 'set show-all-if-ambiguous on'
 
+neofetch

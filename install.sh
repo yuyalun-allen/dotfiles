@@ -75,6 +75,7 @@ git clone --depth=1 https://github.com/prabirshrestha/asyncomplete-lsp.vim.git
 git clone --depth=1 https://github.com/airblade/vim-gitgutter.git
 git clone --depth=1 https://github.com/jasonccox/vim-wayland-clipboard.git
 git clone --depth=1 https://github.com/img-paste-devs/img-paste.vim.git
+git clone --depth=1 https://github.com/lervag/vimtex.git
 popd
 
 # waybar

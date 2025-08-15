@@ -44,6 +44,8 @@
 
 > 注意：配置 fcitx5 的语言时应该选择 `pinyin` 而不是 `Chinese` 之类的。
 
+> Locale 设置为中文后中文字体显示才正常
+
 ### 个性化配置
 
 `sudo pacman -S dconf-editor` 
