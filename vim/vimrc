@@ -337,6 +337,14 @@ if executable('clangd')
     augroup END
 endif
 
+if executable('jdtls')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'Eclipse JDT Language Server',
+        \ 'cmd': {server_info->['jdtls', '-data', getcwd()]},
+        \ 'allowlist': ['java']
+        \ })
+endif
+
 if executable('rust-analyzer')
     augroup lsp_rust
         autocmd!
@@ -427,9 +435,9 @@ augroup lsp_install
 augroup END
 
 " Fold action
-set foldmethod=expr
-  \ foldexpr=lsp#ui#vim#folding#foldexpr()
-  \ foldtext=lsp#ui#vim#folding#foldtext()
+" set foldmethod=expr
+"   \ foldexpr=lsp#ui#vim#folding#foldexpr()
+"   \ foldtext=lsp#ui#vim#folding#foldtext()
 
 " For asyncomplete
 inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
@@ -438,9 +446,9 @@ inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
 
 let g:lsp_semantic_enabled = 1
 
-" let g:lsp_log_verbose = 1
-" let g:lsp_log_file = expand('/tmp/vim-lsp.log')
-" nnoremap <leader>sl :split /tmp/vim-lsp.log<CR>
+let g:lsp_log_verbose = 1
+let g:lsp_log_file = expand('/tmp/vim-lsp.log')
+nnoremap <leader>sl :split /tmp/vim-lsp.log<CR>
 
 
 " Semantic highlight

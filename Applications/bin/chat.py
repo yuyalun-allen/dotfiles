@@ -226,7 +226,7 @@ def get_multiline_input():
     kb = KeyBindings()
     
     # 绑定Ctrl+Enter键
-    @kb.add(Keys.ControlJ)  # Ctrl+J 是 Ctrl+Enter 的内部表示
+    @kb.add("c-s")  
     def _(event):
         # 这会让 prompt 接受当前输入并返回
         event.current_buffer.validate_and_handle()
@@ -234,18 +234,80 @@ def get_multiline_input():
     # 创建会话
     session = PromptSession(key_bindings=kb, multiline=True)
     
-    try:
-        # 获取用户输入
-        user_input = session.prompt("You: ", default="")
-        return user_input if user_input is not None else ""
-    except KeyboardInterrupt:
-        # 处理Ctrl+C
-        print("\nInput cancelled")
-        return ""
-    except EOFError:
-        # 处理Ctrl+D
-        print("\nBye!")
-        sys.exit(0)
+    user_input = session.prompt("You: ", default="")
+    return user_input if user_input is not None else ""
+
+
+def parse_input(input: str):
+    lines = input.split('\n')
+    message_lines = []
+    instructions = {}
+    
+    for line in lines:
+        if line.startswith('@@'):
+            # Process instruction line
+            instruction = line[2:].strip()
+            if instruction == 'tr':
+                instructions['type'] = 'reason'
+            elif instruction == 'ts':
+                instructions['type'] = 'small'
+            elif instruction == 'ic':
+                instructions['image'] = 'clipboard'
+            elif instruction.startswith('if'):
+                # Get file path and convert to base64
+                file_path = instruction[2:].strip()
+                if file_path:
+                    try:
+                        with open(file_path, 'rb') as image_file:
+                            base64_data = base64.b64encode(image_file.read()).decode('utf-8')
+                            instructions['image'] = base64_data
+                    except Exception as e:
+                        print(f"Error reading image file: {e}")
+        else:
+            message_lines.append(line)
+    
+    message = '\n'.join(message_lines).strip()
+    return message, instructions
+
+
+def chat_loop(messages, message, user_message, pipeline):
+    instructions = {}
+    type = "normal"
+    if message:
+        user_message += message 
+        message = ""
+    else:
+        input = get_multiline_input()
+        message, instructions = parse_input(input)
+        user_message += message
+    if pipeline:
+        pipeline = False
+        user_message += get_input()
+
+    # Add user message to the messages list
+    if "image" in instructions:
+        type = "vision"
+        if instructions["image"] == "clipboard":
+            base64_image = get_clipboard_image_base64()
+        else:
+            base64_image = instructions["image"]
+        messages.append({
+            "role": "user",
+            "content": [{"type": "text", "text": user_message},
+                        {"type": "image_url", "image_url": {
+                            "url": f"data:image/png;base64,{base64_image}"
+                            }}]
+                            })
+    else:
+        messages.append({"role": "user", "content": user_message})
+
+    if "type" in instructions:
+        type = instructions["type"]
+    print("Assistant: ", end='', flush=True)
+    response = chat_stream(messages, type)  # Pass the updated messages list to the function
+
+    messages.append({"role": "assistant", "content": response})
+    user_message = ""
 
 # Main interactive loop
 def start_chat(type, message, pipeline, noninteractive, image):
@@ -253,43 +315,13 @@ def start_chat(type, message, pipeline, noninteractive, image):
     messages = []  # Initialize the messages list
     user_message = "You are a helpful and knowledgeable assistant. I may ask you in English, but you should always answer in Chinese."
     while True:
-        if message:
-            user_message += message 
-            message = ""
-        else:
-            try:
-                user_message += get_multiline_input()
-            except KeyboardInterrupt:
-                pass
-            except EOFError:
-                print("Bye!")
-                break
-        if pipeline:
-            pipeline = False
-            user_message += get_input()
-
-        # Add user message to the messages list
-        if image:
-            type = "vision"
-            base64_image = get_clipboard_image_base64()
-            messages.append({
-                "role": "user",
-                "content": [{"type": "text", "text": user_message},
-                            {"type": "image_url", "image_url": {
-                                "url": f"data:image/png;base64,{base64_image}"
-                                }}]
-                                })
-            image = False
-        else:
-            messages.append({"role": "user", "content": user_message})
-
-        print("Assistant: ", end='', flush=True)
-        response = chat_stream(messages, type)  # Pass the updated messages list to the function
-        if noninteractive:
+        try:
+            chat_loop(messages, message, user_message, pipeline)
+        except KeyboardInterrupt:
+            pass
+        except EOFError:
+            print("Bye!")
             break
-
-        messages.append({"role": "assistant", "content": response})
-        user_message = ""
 
 def parse_args():
     parser = argparse.ArgumentParser(description="get args for llm")
