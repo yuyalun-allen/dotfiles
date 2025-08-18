@@ -480,3 +480,14 @@ endif
 
 let g:vimtex_view_method = 'zathura'
 let maplocalleader = ","
+
+let g:vimtex_compiler_latexmk = {
+                    \ 'options': [
+                    \ '-shell-escape',
+                    \ ],
+            \}
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => For coc.nvim
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" 仅在编辑 TeX 文件时加载并启动 coc.nvim
+autocmd FileType tex,java packadd coc.nvim
