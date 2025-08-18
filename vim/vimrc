@@ -337,13 +337,25 @@ if executable('clangd')
     augroup END
 endif
 
-if executable('jdtls')
-    au User lsp_setup call lsp#register_server({
-        \ 'name': 'Eclipse JDT Language Server',
-        \ 'cmd': {server_info->['jdtls', '-data', getcwd()]},
-        \ 'allowlist': ['java']
-        \ })
-endif
+" if executable('jdtls')
+"     au User lsp_setup call lsp#register_server({
+"         \ 'name': 'jdtls',
+"         \ 'cmd': {server_info->['jdtls', '-data', expand('~/.cache/jdtls/workspace'),
+"         \                                '-configuration', expand('~/.cache/jdtls/config')]},
+"         \ 'initialization_options': {
+"         \   'settings': {
+"         \     'java': {
+"         \       'configuration': {
+"         \         'maven': {
+"         \           'userSettings': expand('~/.config/maven/settings.xml')
+"         \         }
+"         \       }
+"         \     }
+"         \   }
+"         \ },
+"         \ 'allowlist': ['java']
+"         \ })
+" endif
 
 if executable('rust-analyzer')
     augroup lsp_rust
