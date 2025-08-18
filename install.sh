@@ -65,11 +65,14 @@ ln -sf "$DOTFILES_DIR/tmux/tmux.conf" "$XDG_CONFIG_HOME/tmux/tmux.conf"
 
 # vim
 echo "Installing recommending vim plugins"
-VIM_PLUGIN_HOME="$XDG_DATA_HOME/vim/pack/vendor/start"
+VIM_PLUGIN_START_HOME="$XDG_DATA_HOME/vim/pack/vendor/start"
+VIM_PLUGIN_OPT_HOME="$XDG_DATA_HOME/vim/pack/vendor/opt"
 mkdir -p "$XDG_CONFIG_HOME/vim"
-mkdir -p $VIM_PLUGIN_HOME
+mkdir -p $VIM_PLUGIN_START_HOME
+mkdir -p $VIM_PLUGIN_OPT_HOME
 ln -sf "$DOTFILES_DIR/vim/vimrc" "$XDG_CONFIG_HOME/vim/vimrc"
-pushd $VIM_PLUGIN_HOME
+ln -sf "$DOTFILES_DIR/vim/coc-settings.json" "$XDG_CONFIG_HOME/vim/coc-settings.json"
+pushd $VIM_PLUGIN_START_HOME
 git clone --depth=1 https://github.com/NLKNguyen/papercolor-theme.git
 git clone --depth=1 https://github.com/prabirshrestha/vim-lsp.git
 git clone --depth=1 https://github.com/dense-analysis/ale.git 
@@ -80,6 +83,9 @@ git clone --depth=1 https://github.com/airblade/vim-gitgutter.git
 git clone --depth=1 https://github.com/jasonccox/vim-wayland-clipboard.git
 git clone --depth=1 https://github.com/img-paste-devs/img-paste.vim.git
 git clone --depth=1 https://github.com/lervag/vimtex.git
+popd
+pushd $VIM_PLUGIN_OPT_HOME
+git clone --depth=1 https://github.com/neoclide/coc.nvim.git
 popd
 
 # waybar
