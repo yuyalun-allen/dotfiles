@@ -212,7 +212,54 @@ if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] &&
 fi
 
 # In bashrc
-bind 'TAB: menu-complete'
 bind 'set show-all-if-ambiguous on'
+# --- 路径定义 ---
+# 定义一个文件，用于存储 _WORKING_DIR 的值
+# 通常放在用户主目录下比较安全
+_WORKING_DIR_FILE="$HOME/.working_dir_path"
+
+# --- 启动时加载 ---
+# 检查持久化文件是否存在，如果存在就加载路径
+if [ -f "$_WORKING_DIR_FILE" ]; then
+  export _WORKING_DIR=$(cat "$_WORKING_DIR_FILE")
+fi
+
+# --- 函数定义 ---
+
+# setcwd: 设置当前目录为 _WORKING_DIR 并保存到文件
+# 用法: setcwd
+function setcwd() {
+  if [ -r "$(pwd)" ] && [ -x "$(pwd)" ]; then
+    _WORKING_DIR="$(pwd)"
+    # 将路径保存到文件中
+    echo "$_WORKING_DIR" > "$_WORKING_DIR_FILE"
+    echo "工作目录已设置为: $_WORKING_DIR"
+  else
+    echo "错误: 当前目录不可访问，无法设置为工作目录。"
+    return 1
+  fi
+}
+
+# cdcwd: 切换到之前设置的 _WORKING_DIR
+# 用法: cdcwd
+function cdcwd() {
+  # 检查变量是否已设置
+  if [ -z "$_WORKING_DIR" ]; then
+    echo "错误: _WORKING_DIR 未设置。请先使用 'setcwd' 命令。"
+    return 1
+  fi
+
+  # 检查目录是否存在且可进入
+  if [ -d "$_WORKING_DIR" ] && [ -x "$_WORKING_DIR" ]; then
+    cd "$_WORKING_DIR" || return 1
+    echo "已切换到工作目录: $(pwd)"
+  else
+    echo "错误: 工作目录 '$_WORKING_DIR' 不存在或不可进入，已清除记录。"
+    # 如果目录不存在，就清空变量和文件记录
+    _WORKING_DIR=""
+    rm -f "$_WORKING_DIR_FILE"
+    return 1
+  fi
+}
 
 neofetch
