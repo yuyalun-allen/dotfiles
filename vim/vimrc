@@ -486,8 +486,12 @@ let g:vimtex_compiler_latexmk = {
                     \ '-shell-escape',
                     \ ],
             \}
+let g:vimtex_compiler_latexmk_engines = {
+      \ '_': '-xelatex',
+      \}
+let g:vimtex_quickfix_open_on_warning = 0
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => For coc.nvim
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " 仅在编辑 TeX 文件时加载并启动 coc.nvim
-autocmd FileType tex,java packadd coc.nvim
+autocmd FileType tex,java,javascript packadd coc.nvim
