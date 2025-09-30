@@ -298,122 +298,7 @@ let g:copilot_enabled = v:false
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => LSP settings
-            \ 'cmd': {server_info->['ty', 'server']},
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Register LS
-if executable('pyright-langserver')
-    augroup lsp_pyright
-        autocmd!
-        autocmd User lsp_setup call lsp#register_server({
-            \ 'name': 'pyright',
-            \ 'cmd': {server_info->['pyright-langserver', '--stdio']},
-            \ 'whitelist': ['python'],
-            \ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'pyproject.toml'))},
-            \ 'workspace_config': {
-            \   'python': {
-            \     'analysis': {
-            \       'typeCheckingMode': 'basic'
-            \     }
-            \   }
-            \ }
-            \ })
-    augroup END
-endif
-
-if executable('clangd')
-    augroup lsp_clangd
-        autocmd!
-        autocmd User lsp_setup call lsp#register_server({
-            \ 'name': 'clangd',
-            \ 'cmd': {server_info->['clangd']},
-            \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp'],
-            \ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'compile_commands.json'))},
-            \ 'workspace_config': {
-            \   'clangd': {
-            \     'fallbackFlags': ['-std=c++17']
-            \   }
-            \ }
-            \ })
-    augroup END
-endif
-
-" if executable('jdtls')
-"     au User lsp_setup call lsp#register_server({
-"         \ 'name': 'jdtls',
-"         \ 'cmd': {server_info->['jdtls', '-data', expand('~/.cache/jdtls/workspace'),
-"         \                                '-configuration', expand('~/.cache/jdtls/config')]},
-"         \ 'initialization_options': {
-"         \   'settings': {
-"         \     'java': {
-"         \       'configuration': {
-"         \         'maven': {
-"         \           'userSettings': expand('~/.config/maven/settings.xml')
-"         \         }
-"         \       }
-"         \     }
-"         \   }
-"         \ },
-"         \ 'allowlist': ['java']
-"         \ })
-" endif
-
-if executable('rust-analyzer')
-    augroup lsp_rust
-        autocmd!
-        autocmd User lsp_setup call lsp#register_server({
-            \ 'name': 'rust-analyzer',
-            \ 'cmd': {server_info->['rust-analyzer']},
-            \ 'whitelist': ['rust'],
-            \ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'Cargo.toml'))},
-            \ 'workspace_config': {
-            \   'rust-analyzer': {
-            \     'checkOnSave': {
-            \       'command': 'clippy'
-            \     }
-            \   }
-            \ }
-            \ })
-    augroup END
-endif
-
-" Register gopls with vim-lsp
-if executable('gopls')
-    au User lsp_setup call lsp#register_server({
-        \ 'name': 'gopls',
-        \ 'cmd': {server_info->['gopls']},
-        \ 'allowlist': ['go'],
-        \ 'workspace_config': {
-        \     'gopls': {
-        \         'staticcheck': v:true,
-        \         'completeUnimported': v:true,
-        \         'usePlaceholders': v:true,
-        \         'analyses': {
-        \             'unusedparams': v:true,
-        \             'shadow': v:true,
-        \         },
-        \         'gofumpt': v:true,
-        \     },
-        \ },
-        \ 'initialization_options': {
-        \     'gofumpt': v:true,
-        \ }
-        \ })
-endif
-
-if executable('ruby-lsp')
-  au User lsp_setup call lsp#register_server({
-    \ 'name': 'ruby-lsp',
-    \ 'cmd': {server_info->['ruby-lsp']},
-    \ 'allowlist': ['ruby'],
-    \ 'workspace_config': {
-    \   'ruby-lsp': {
-    \     'formatter': 'rubocop',
-    \     'diagnostics': 'true',
-    \   }
-    \ }
-    \ })
-endif
-
 " Key mappings
 
 function! s:on_lsp_buffer_enabled() abort
@@ -472,6 +357,16 @@ let g:lsp_settings = {
   \     'Variable': 'Variable'
   \ }}}
 
+let g:lsp_settings['eclipse-jdt-ls'] = {
+\  'java': {
+\    'configuration': {
+\      'maven': {
+\        'userSettings': expand('~/.config/maven/settings.xml')
+\      }
+\    }
+\  }
+\ }
+
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => For markdown
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -506,4 +401,4 @@ let g:vimtex_quickfix_open_on_warning = 0
 " => For coc.nvim
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " 仅在编辑 TeX 文件时加载并启动 coc.nvim
-autocmd FileType tex,java,javascript packadd coc.nvim
+autocmd FileType tex packadd coc.nvim
