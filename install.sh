@@ -37,7 +37,7 @@ ln -sf "$DOTFILES_DIR/fish/config.fish" "$XDG_CONFIG_HOME/fish/config.fish"
 
 # fonts
 mkdir -p "$XDG_CONFIG_HOME/fonts"
-ln -sf "$DOTFILES_DIR/fonts/fonts.conf" "$XDG_CONFIG_HOME/fonts/fonts.conf"
+ln -sf "$DOTFILES_DIR/fonts/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
 
 # general env
 mkdir -p "$XDG_CONFIG_HOME/environment.d"

@@ -190,8 +190,7 @@ eval "$(rbenv init -)"
 
 # nvm
 if [ -d "/usr/share/nvm" ]; then
-  source /usr/share/nvm/nvm.sh
-  source /usr/share/nvm/bash_completion
+  source /usr/share/nvm/init-nvm.sh
 fi
 
 export http_proxy=http://localhost:7890
