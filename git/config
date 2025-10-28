@@ -10,16 +10,21 @@
 [push]
 	default = current
 [init]
-	defaultBranch = main
+	defaultBranch = master
 [credential]
 	helper = store
 [merge]
   conflictstyle = zdiff3
 	tool = vimdiff
 [pull]
-	rebase = false
+	rebase = true
 # 
 # [interactive]
 #   diffFilter = delta --color-only
 # [delta]
 #   navigate = true    # use n and N to move between diff sections
+[alias]
+	co = checkout
+	br = branch
+	ci = commit
+	st = status

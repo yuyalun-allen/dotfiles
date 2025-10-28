@@ -88,6 +88,9 @@ pushd $VIM_PLUGIN_OPT_HOME
 git clone --depth=1 https://github.com/neoclide/coc.nvim.git
 popd
 
+# nvim
+ln -sf "$DOTFILES_DIR/nvim" "$XDG_CONFIG_HOME/nvim"
+
 # waybar
 mkdir -p "$XDG_CONFIG_HOME/waybar"
 ln -sf "$DOTFILES_DIR/waybar/config" "$XDG_CONFIG_HOME/waybar/config"

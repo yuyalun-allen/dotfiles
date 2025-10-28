@@ -68,7 +68,12 @@
     "javascript.inlayHints.functionLikeReturnTypes.enabled": true,
     "python.analysis.inlayHints.functionReturnTypes": true,
     "github.copilot.enable": {
-        "enabled": true
+        "*": false,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false,
+        "enabled": true,
+        "rust": false
     },
     "cmake.showOptionsMovedNotification": false,
     "java.configuration.maven.userSettings": "/home/allen/.config/maven/settings.xml",
@@ -86,4 +91,7 @@
     "github.copilot.nextEditSuggestions.enabled": true,
     "python.analysis.typeCheckingMode": "basic",
     "python.defaultInterpreterPath": "/bin/python",
+    "[jsonc]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
 }
