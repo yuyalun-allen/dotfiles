@@ -74,7 +74,8 @@
         "scminput": false,
         "enabled": true,
         "rust": false,
-        "python": true
+        "python": true,
+        "shellscript": true
     },
     "cmake.showOptionsMovedNotification": false,
     "java.configuration.maven.userSettings": "/home/allen/.config/maven/settings.xml",
