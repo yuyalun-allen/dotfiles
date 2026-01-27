@@ -81,7 +81,9 @@ fi
 
 # Proxy
 
-export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 all_proxy=socks5://127.0.0.1:7890
+export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890
+
+export no_proxy="localhost, 127.0.0.1, 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 172.29.0.0/16, ::1, .local"
 
 # RBENV
 eval "$(rbenv init -)"

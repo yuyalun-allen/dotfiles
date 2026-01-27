@@ -73,7 +73,8 @@
         "markdown": false,
         "scminput": false,
         "enabled": true,
-        "rust": false
+        "rust": false,
+        "python": true
     },
     "cmake.showOptionsMovedNotification": false,
     "java.configuration.maven.userSettings": "/home/allen/.config/maven/settings.xml",
@@ -90,8 +91,12 @@
     "C_Cpp.intelliSenseEngine": "disabled",
     "github.copilot.nextEditSuggestions.enabled": true,
     "python.analysis.typeCheckingMode": "basic",
-    "python.defaultInterpreterPath": "/bin/python",
+    "python.defaultInterpreterPath": "/usr/bin/python",
     "[jsonc]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "vscode.json-language-features"
     },
+    "cmake.showConfigureWithDebuggerNotification": false,
+    "geminicodeassist.project": "analog-audio-xfgnf",
+    "geminicodeassist.inlineSuggestions.enableAuto": false,
+    "chat.viewSessions.orientation": "stacked",
 }
