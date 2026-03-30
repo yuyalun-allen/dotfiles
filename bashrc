@@ -97,6 +97,7 @@ alias reboot="systemctl reboot"
 alias poweroff="systemctl poweroff"
 
 alias todo="pushd $HOME/Documents/private && vim TODO.md"
+alias list="pushd $HOME/Documents/private && vim LIST.md"
 
 # auto-starts
 
