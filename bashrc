@@ -98,6 +98,8 @@ alias poweroff="systemctl poweroff"
 
 alias todo="pushd $HOME/Documents/private && vim TODO.md"
 alias list="pushd $HOME/Documents/private && vim LIST.md"
+||||||| parent of 91a0fa3 (update)
+alias show="pushd $HOME/Documents/private && vim show.md"
 
 # auto-starts
 
