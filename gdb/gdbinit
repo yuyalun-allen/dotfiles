@@ -1,6 +1,0 @@
-set debuginfod enabled on
-tui enable
-set tui mouse on
-
-break main
-start

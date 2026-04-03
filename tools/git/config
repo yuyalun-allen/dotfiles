@@ -2,7 +2,7 @@
 	name = allen
 	email = yuyalun.allen@gmail.com
 [core]
-	excludesfile = ~/.gitigore_global
+	excludesfile = /home/allen/.config/git/gitignore_global
 	editor = vim
 #  pager = delta
 	ignorecase = false

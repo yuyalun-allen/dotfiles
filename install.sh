@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 # installation script for dotfiles
 DOTFILES_DIR=$(pwd)
@@ -17,46 +16,46 @@ XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 mkdir -p "$XDG_CONFIG_HOME"
 mkdir -p "$XDG_DATA_HOME"
 
-# 3. Create target directories and create symbolic links
-# shell
+# 3. Shell
 # use omarchy's bash settings
 git clone --depth=1 https://github.com/basecamp/omarchy.git "$XDG_DATA_HOME/omarchy"
 ln -sf "$DOTFILES_DIR/bash_profile" "$HOME/.bash_profile"
 ln -sf "$DOTFILES_DIR/bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/profile" "$HOME/.profile"
 
-# Applications/bin
-mkdir -p "$HOME/Applications/bin"
-ln -sf "$DOTFILES_DIR/Applications/bin/chat.py" "$HOME/Applications/bin/chat"
-
-# gdb
-mkdir -p "$XDG_CONFIG_HOME/gdb"
-ln -sf "$DOTFILES_DIR/gdb/gdbinit" "$XDG_CONFIG_HOME/gdb/gdbinit"
-
-# maven
-mkdir -p "$XDG_CONFIG_HOME/maven"
-ln -sf "$DOTFILES_DIR/maven/settings.xml" "$XDG_CONFIG_HOME/maven/settings.xml"
+# 4. environment settings
 
 # fonts
 mkdir -p "$XDG_CONFIG_HOME/fonts"
-ln -sf "$DOTFILES_DIR/fonts/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
+ln -sf "$DOTFILES_DIR/env/fonts/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
 
 # general env
 mkdir -p "$XDG_CONFIG_HOME/environment.d"
-ln -sf "$DOTFILES_DIR/environment.d/general-env.conf" "$XDG_CONFIG_HOME/environment.d/general-env.conf"
+ln -sf "$DOTFILES_DIR/env/environment.d/general-env.conf" "$XDG_CONFIG_HOME/environment.d/general-env.conf"
+
+# user systemd
+
+
+# 5. tool settings
+
+# maven
+mkdir -p "$XDG_CONFIG_HOME/maven"
+ln -sf "$DOTFILES_DIR/tools/maven/settings.xml" "$XDG_CONFIG_HOME/maven/settings.xml"
+
 
 # git
 mkdir -p "$XDG_CONFIG_HOME/git"
-ln -sf "$DOTFILES_DIR/git/config" "$XDG_CONFIG_HOME/git/config"
+ln -sf "$DOTFILES_DIR/tools/git/config" "$XDG_CONFIG_HOME/git/config"
+ln -sf "$DOTFILES_DIR/tools/git/gitignore_global" "$XDG_CONFIG_HOME/git/gitignore_global"
 
 # kitty
 mkdir -p "$XDG_CONFIG_HOME/kitty"
-ln -sf "$DOTFILES_DIR/kitty/kitty.conf" "$XDG_CONFIG_HOME/kitty/kitty.conf"
+ln -sf "$DOTFILES_DIR/tools/kitty/kitty.conf" "$XDG_CONFIG_HOME/kitty/kitty.conf"
 
 
 # tmux
 mkdir -p "$XDG_CONFIG_HOME/tmux"
-ln -sf "$DOTFILES_DIR/tmux/tmux.conf" "$XDG_CONFIG_HOME/tmux/tmux.conf"
+ln -sf "$DOTFILES_DIR/tools/tmux/tmux.conf" "$XDG_CONFIG_HOME/tmux/tmux.conf"
 
 # vim
 echo "Installing recommending vim plugins"
@@ -65,8 +64,8 @@ VIM_PLUGIN_OPT_HOME="$XDG_DATA_HOME/vim/pack/vendor/opt"
 mkdir -p "$XDG_CONFIG_HOME/vim"
 mkdir -p $VIM_PLUGIN_START_HOME
 mkdir -p $VIM_PLUGIN_OPT_HOME
-ln -sf "$DOTFILES_DIR/vim/vimrc" "$XDG_CONFIG_HOME/vim/vimrc"
-ln -sf "$DOTFILES_DIR/vim/coc-settings.json" "$XDG_CONFIG_HOME/vim/coc-settings.json"
+ln -sf "$DOTFILES_DIR/tools/vim/vimrc" "$XDG_CONFIG_HOME/vim/vimrc"
+ln -sf "$DOTFILES_DIR/tools/vim/coc-settings.json" "$XDG_CONFIG_HOME/vim/coc-settings.json"
 pushd $VIM_PLUGIN_START_HOME
 git clone --depth=1 https://github.com/NLKNguyen/papercolor-theme.git
 git clone --depth=1 https://github.com/prabirshrestha/vim-lsp.git
