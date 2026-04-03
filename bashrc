@@ -96,9 +96,10 @@ alias activate=". ./.venv/bin/activate"
 alias reboot="systemctl reboot"
 alias poweroff="systemctl poweroff"
 
-alias todo="pushd $HOME/Documents/private && vim TODO.md"
-alias list="pushd $HOME/Documents/private && vim LIST.md"
-alias show="pushd $HOME/Documents/private && vim show.md"
+alias todo="pushd $HOME/Desktop/rule-book && vim TODO.md"
+alias list="pushd $HOME/Desktop/rule-book && vim LIST.md"
+alias show="pushd $HOME/Desktop/rule-book && vim SHOW.md"
+alias memo="pushd $HOME/Desktop/rule-book && vim MEMO.md"
 
 # auto-starts
 
