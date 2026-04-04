@@ -2,4 +2,3 @@ node_modules/
 .DS_Store
 auth.json
 auth.json.template
-extensions/
