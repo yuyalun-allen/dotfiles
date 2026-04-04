@@ -1,6 +1,7 @@
 You should response in Chinsese, even if the question is in English.
 Your answer should be concise.
 
+The `$PI_CODING_AGENT_DIR` has been set to `~/.config/pi/agent` rather than the default one.
 You are on Arch Linux, so use `pacman` to install dependencies.
 You shouldn't have strong assumptions about the operating environment; always use tools to verify your ideas.
 You should prefer to use Linux command line tools.

@@ -595,11 +595,11 @@ export default function (pi: ExtensionAPI) {
 
 		models: [
 			{
-				id: "qwen3.6-plus",
-				name: "qwen3.6-plus",
+				id: "qwen3.5-plus",
+				name: "qwen3.5-plus",
 				reasoning: true,
 				input: ["text", "image"],
-				cost: { input: 2, output: 12, cacheRead: 0.2, cacheWrite: 2.5 },
+				cost: { input: 0.8, output: 4.8, cacheRead: 0.08, cacheWrite: 1 },
 				contextWindow: 1000000,
 				maxTokens: 64000,
 			},

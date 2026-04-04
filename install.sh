@@ -94,22 +94,14 @@ ln -sf "$DOTFILES_DIR/vscode/code-flags.conf" "$XDG_CONFIG_HOME/code-flags.conf"
 echo "Installing pi coding agent configuration..."
 PI_AGENT_CONFIG="$XDG_CONFIG_HOME/pi/agent"
 
-# Backup existing pi agent data (sessions are machine-specific)
-BACKUP_DIR="$HOME/.pi-agent-backup.$(date +%Y%m%d%H%M%S)"
-if [ -d "$PI_AGENT_CONFIG/sessions" ]; then
-  echo "Backing up existing sessions to $BACKUP_DIR..."
-  mkdir -p "$BACKUP_DIR"
-  cp -r "$PI_AGENT_CONFIG/sessions" "$BACKUP_DIR/"
-fi
-
 # Remove existing directories that will be replaced by symlinks
 rm -rf "$PI_AGENT_CONFIG/skills"
 
 mkdir -p "$PI_AGENT_CONFIG"
-mkdir -p "$PI_AGENT_CONFIG/extensions"  # Local extensions directory (not synced)
 ln -sf "$DOTFILES_DIR/tools/pi/agent/settings.json" "$PI_AGENT_CONFIG/settings.json"
 ln -sf "$DOTFILES_DIR/tools/pi/agent/APPEND_SYSTEM.md" "$PI_AGENT_CONFIG/APPEND_SYSTEM.md"
 ln -sf "$DOTFILES_DIR/tools/pi/agent/skills" "$PI_AGENT_CONFIG/skills"
+ln -sf "$DOTFILES_DIR/tools/pi/agent/pi-permissions.jsonc" "$PI_AGENT_CONFIG/pi-permissions.jsonc"
 
 # Install pi packages from settings.json (includes pi-permission-system)
 if command -v pi &> /dev/null && [ -f "$PI_AGENT_CONFIG/settings.json" ]; then
@@ -130,6 +122,32 @@ if [ -f "$DOTFILES_DIR/tools/pi/agent/extensions/custom-anthropic/package.json" 
   if command -v npm &> /dev/null; then
     echo "Installing custom-anthropic npm dependencies..."
     (cd "$CUSTOM_ANTHROPIC_EXT" && npm install --silent 2>/dev/null) || true
+  fi
+fi
+
+# Install pi-permission-system extension
+PI_PERMISSION_SYSTEM_EXT="$PI_AGENT_CONFIG/extensions/pi-permission-system"
+if [ -f "$DOTFILES_DIR/tools/pi/agent/extensions/pi-permission-system/package.json" ]; then
+  echo "Installing pi-permission-system extension..."
+  # Remove existing directory/file before creating symlinks
+  rm -rf "$PI_PERMISSION_SYSTEM_EXT/src"
+  rm -f "$PI_PERMISSION_SYSTEM_EXT/index.ts"
+  rm -f "$PI_PERMISSION_SYSTEM_EXT/package.json"
+  rm -f "$PI_PERMISSION_SYSTEM_EXT/config.json"
+  
+  mkdir -p "$PI_PERMISSION_SYSTEM_EXT"
+  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/pi-permission-system/index.ts" "$PI_PERMISSION_SYSTEM_EXT/index.ts"
+  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/pi-permission-system/package.json" "$PI_PERMISSION_SYSTEM_EXT/package.json"
+  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/pi-permission-system/config.json" "$PI_PERMISSION_SYSTEM_EXT/config.json"
+  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/pi-permission-system/src" "$PI_PERMISSION_SYSTEM_EXT/src"
+  
+  # Create logs directory
+  mkdir -p "$PI_PERMISSION_SYSTEM_EXT/logs"
+  
+  # Install npm dependencies
+  if command -v npm &> /dev/null; then
+    echo "Installing pi-permission-system npm dependencies..."
+    (cd "$PI_PERMISSION_SYSTEM_EXT" && npm install --silent 2>/dev/null) || true
   fi
 fi
 

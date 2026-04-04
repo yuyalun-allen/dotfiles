@@ -1,0 +1,65 @@
+{
+  "name": "pi-permission-system",
+  "version": "0.4.1",
+  "description": "Permission enforcement extension for the Pi coding agent.",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "src",
+    "config.json",
+    "config/config.example.json",
+    "schemas/permissions.schema.json",
+    "asset",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "npx --yes -p typescript@5.7.3 tsc -p tsconfig.json --noCheck",
+    "lint": "npm run build",
+    "test": "bun ./src/test.ts && bun ./src/config-modal-test.ts",
+    "check": "npm run lint && npm run test"
+  },
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "pi-coding-agent",
+    "coding-agent",
+    "permissions",
+    "policy",
+    "access-control",
+    "authorization",
+    "security"
+  ],
+  "author": "MasuRii",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MasuRii/pi-permission-system.git"
+  },
+  "homepage": "https://github.com/MasuRii/pi-permission-system#readme",
+  "bugs": {
+    "url": "https://github.com/MasuRii/pi-permission-system/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "^0.64.0",
+    "@mariozechner/pi-tui": "^0.64.0",
+    "@sinclair/typebox": "^0.34.49"
+  }
+}
