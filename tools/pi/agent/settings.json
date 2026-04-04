@@ -1,0 +1,12 @@
+{
+  "lastChangelogVersion": "0.63.1",
+  "defaultProvider": "custom-anthropic",
+  "defaultModel": "qwen3.6-plus",
+  "packages": [
+    "npm:pi-permission-system"
+  ],
+  "extensions": [
+    "./extensions/custom-anthropic"
+  ],
+  "defaultThinkingLevel": "medium"
+}

@@ -33,6 +33,9 @@ ln -sf "$DOTFILES_DIR/env/fonts/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.c
 mkdir -p "$XDG_CONFIG_HOME/environment.d"
 ln -sf "$DOTFILES_DIR/env/environment.d/general-env.conf" "$XDG_CONFIG_HOME/environment.d/general-env.conf"
 
+# secret keys loader (from GNOME Keyring)
+ln -sf "$DOTFILES_DIR/env/environment.d/load-secret-keys.sh" "$XDG_CONFIG_HOME/environment.d/load-secret-keys.sh"
+
 # user systemd
 
 
@@ -86,5 +89,49 @@ popd
 mkdir -p "$XDG_CONFIG_HOME/Code/User"
 ln -sf "$DOTFILES_DIR/vscode/settings.json" "$XDG_CONFIG_HOME/Code/User/settings.json"
 ln -sf "$DOTFILES_DIR/vscode/code-flags.conf" "$XDG_CONFIG_HOME/code-flags.conf"
+
+# pi coding agent
+echo "Installing pi coding agent configuration..."
+PI_AGENT_CONFIG="$XDG_CONFIG_HOME/pi/agent"
+
+# Backup existing pi agent data (sessions are machine-specific)
+BACKUP_DIR="$HOME/.pi-agent-backup.$(date +%Y%m%d%H%M%S)"
+if [ -d "$PI_AGENT_CONFIG/sessions" ]; then
+  echo "Backing up existing sessions to $BACKUP_DIR..."
+  mkdir -p "$BACKUP_DIR"
+  cp -r "$PI_AGENT_CONFIG/sessions" "$BACKUP_DIR/"
+fi
+
+# Remove existing directories that will be replaced by symlinks
+rm -rf "$PI_AGENT_CONFIG/skills"
+
+mkdir -p "$PI_AGENT_CONFIG"
+mkdir -p "$PI_AGENT_CONFIG/extensions"  # Local extensions directory (not synced)
+ln -sf "$DOTFILES_DIR/tools/pi/agent/settings.json" "$PI_AGENT_CONFIG/settings.json"
+ln -sf "$DOTFILES_DIR/tools/pi/agent/APPEND_SYSTEM.md" "$PI_AGENT_CONFIG/APPEND_SYSTEM.md"
+ln -sf "$DOTFILES_DIR/tools/pi/agent/skills" "$PI_AGENT_CONFIG/skills"
+
+# Install pi packages from settings.json (includes pi-permission-system)
+if command -v pi &> /dev/null && [ -f "$PI_AGENT_CONFIG/settings.json" ]; then
+  echo "Installing pi packages from settings.json..."
+  pi install --global "$(jq -r '.packages[]' "$PI_AGENT_CONFIG/settings.json" 2>/dev/null | tr '\n' ' ')" 2>/dev/null || true
+fi
+
+# Install custom-anthropic extension dependencies
+CUSTOM_ANTHROPIC_EXT="$PI_AGENT_CONFIG/extensions/custom-anthropic"
+if [ -f "$DOTFILES_DIR/tools/pi/agent/extensions/custom-anthropic/package.json" ]; then
+  echo "Installing custom-anthropic extension..."
+  mkdir -p "$CUSTOM_ANTHROPIC_EXT"
+  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/custom-anthropic/index.ts" "$CUSTOM_ANTHROPIC_EXT/index.ts"
+  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/custom-anthropic/package.json" "$CUSTOM_ANTHROPIC_EXT/package.json"
+  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/custom-anthropic/package-lock.json" "$CUSTOM_ANTHROPIC_EXT/package-lock.json"
+  
+  # Install npm dependencies
+  if command -v npm &> /dev/null; then
+    echo "Installing custom-anthropic npm dependencies..."
+    (cd "$CUSTOM_ANTHROPIC_EXT" && npm install --silent 2>/dev/null) || true
+  fi
+fi
+
 
 echo "Dotfiles successfully linked to XDG directories."
