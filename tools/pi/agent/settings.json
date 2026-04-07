@@ -2,5 +2,6 @@
   "lastChangelogVersion": "0.65.0",
   "defaultProvider": "custom-anthropic",
   "defaultModel": "qwen3.5-plus",
-  "defaultThinkingLevel": "medium"
+  "defaultThinkingLevel": "medium",
+  "hideThinkingBlock": false
 }

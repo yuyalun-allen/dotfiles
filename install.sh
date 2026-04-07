@@ -65,8 +65,8 @@ popd
 
 # vscode
 mkdir -p "$XDG_CONFIG_HOME/Code/User"
-ln -sf "$DOTFILES_DIR/vscode/settings.json" "$XDG_CONFIG_HOME/Code/User/settings.json"
-ln -sf "$DOTFILES_DIR/vscode/code-flags.conf" "$XDG_CONFIG_HOME/code-flags.conf"
+ln -sf "$DOTFILES_DIR/tools/vscode/settings.json" "$XDG_CONFIG_HOME/Code/User/settings.json"
+ln -sf "$DOTFILES_DIR/tools/vscode/code-flags.conf" "$XDG_CONFIG_HOME/code-flags.conf"
 
 # pi coding agent
 echo "Installing pi coding agent configuration..."

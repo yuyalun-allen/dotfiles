@@ -603,6 +603,15 @@ export default function (pi: ExtensionAPI) {
 				contextWindow: 1000000,
 				maxTokens: 64000,
 			},
+			{
+				id: "qwen3.6-plus",
+				name: "qwen3.6-plus",
+				reasoning: true,
+				input: ["text", "image"],
+				cost: { input: 2, output: 12, cacheRead: 0.2, cacheWrite: 2.5 },
+				contextWindow: 1000000,
+				maxTokens: 64000,
+			},
 		],
 
 		oauth: {

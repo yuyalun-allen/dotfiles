@@ -10,7 +10,7 @@ license: Proprietary. LICENSE.txt has complete terms
 
 | Task | Guide |
 |------|-------|
-| Read/analyze content | `python -m markitdown presentation.pptx` |
+| Read/analyze content | `markitdown presentation.pptx` |
 | Edit or create from template | Read [editing.md](editing.md) |
 | Create from scratch | Read [pptxgenjs.md](pptxgenjs.md) |
 
@@ -20,7 +20,7 @@ license: Proprietary. LICENSE.txt has complete terms
 
 ```bash
 # Text extraction
-python -m markitdown presentation.pptx
+markitdown presentation.pptx
 
 # Visual overview
 python scripts/thumbnail.py presentation.pptx
@@ -147,7 +147,7 @@ Your first render is almost never correct. Approach QA as a bug hunt, not a conf
 ### Content QA
 
 ```bash
-python -m markitdown output.pptx
+markitdown output.pptx
 ```
 
 Check for missing content, typos, wrong order.
@@ -155,7 +155,7 @@ Check for missing content, typos, wrong order.
 **When using templates, check for leftover placeholder text:**
 
 ```bash
-python -m markitdown output.pptx | grep -iE "xxxx|lorem|ipsum|this.*(page|slide).*layout"
+markitdown output.pptx | grep -iE "xxxx|lorem|ipsum|this.*(page|slide).*layout"
 ```
 
 If grep returns results, fix them before declaring success.
