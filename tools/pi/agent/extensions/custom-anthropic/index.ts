@@ -53,7 +53,7 @@ import { execSync } from "node:child_process";
 function getApiKey(): string {
 	try {
 		// Try secret-tool first (most secure)
-		const key = execSync("secret-tool lookup service 'dashscope' field 'api_key' 2>/dev/null", {
+		const key = execSync("secret-tool lookup service 'deepseek' field 'api_key' 2>/dev/null", {
 			encoding: "utf8",
 			stdio: ["pipe", "pipe", "pipe"],
 		}).trim();
@@ -235,7 +235,7 @@ function convertContentBlocks(
 	return blocks;
 }
 
-function convertMessages(messages: Message[], isOAuth: boolean, _tools?: Tool[]): any[] {
+function convertMessages(messages: Message[], isOAuth: boolean, thinkingEnabled: boolean, _tools?: Tool[]): any[] {
 	const params: any[] = [];
 
 	for (let i = 0; i < messages.length; i++) {
@@ -264,16 +264,36 @@ function convertMessages(messages: Message[], isOAuth: boolean, _tools?: Tool[])
 			for (const block of msg.content) {
 				if (block.type === "text" && block.text.trim()) {
 					blocks.push({ type: "text", text: sanitizeSurrogates(block.text) });
-				} else if (block.type === "thinking" && block.thinking.trim()) {
+				} else if (block.type === "thinking") {
+					// Thinking blocks with a signature MUST always be passed
+					// back to the API (required by Anthropic/DeepSeek protocol).
+					// This applies even when thinking mode is disabled for the
+					// current request, because the block was already returned
+					// by the API in a previous turn.
 					if ((block as ThinkingContent).thinkingSignature) {
-						blocks.push({
-							type: "thinking" as any,
-							thinking: sanitizeSurrogates(block.thinking),
-							signature: (block as ThinkingContent).thinkingSignature!,
-						});
-					} else {
+						// Only pass back if thinking text is non-empty.
+						// Empty thinking + signature can occur when:
+						// - The request was aborted mid-stream (after signature_delta
+						//   but before any thinking_delta with actual text)
+						// - DeepSeek API returns a valid thinking block header but
+						//   zero-length thinking text (e.g., interleaved with tools)
+						// Passing empty thinking back causes 400 errors from DeepSeek.
+						if (block.thinking.trim()) {
+							blocks.push({
+								type: "thinking" as any,
+								thinking: sanitizeSurrogates(block.thinking),
+								signature: (block as ThinkingContent).thinkingSignature!,
+							});
+						}
+						// If thinking text is empty, drop the block entirely.
+						// The API won't complain because the block was never
+						// properly emitted (it was either aborted or zero-length).
+					} else if (block.thinking.trim()) {
+						// No signature: this is internal reasoning without API
+						// verification. Convert to text so it appears in context.
 						blocks.push({ type: "text", text: sanitizeSurrogates(block.thinking) });
 					}
+					// Skip blocks with no signature AND no thinking text.
 				} else if (block.type === "toolCall") {
 					blocks.push({
 						type: "tool_use",
@@ -414,7 +434,7 @@ function streamCustomAnthropic(
 			// Build request params
 			const params: MessageCreateParamsStreaming = {
 				model: model.id,
-				messages: convertMessages(context.messages, isOAuth, context.tools),
+				messages: convertMessages(context.messages, isOAuth, !!(options?.reasoning && model.reasoning), context.tools),
 				max_tokens: options?.maxTokens || Math.floor(model.maxTokens / 3),
 				stream: true,
 			};
@@ -462,6 +482,11 @@ function streamCustomAnthropic(
 					type: "enabled",
 					budget_tokens: customBudget ?? defaultBudgets[options.reasoning] ?? 10240,
 				};
+			} else if (!(options?.reasoning && model.reasoning)) {
+				// Even when thinking mode is OFF, we still need to pass back
+				// any existing thinking blocks with signatures from the history.
+				// Those blocks are handled by convertMessages, so we don't
+				// need the thinking param here. Just skip.
 			}
 
 			const anthropicStream = client.messages.stream({ ...params }, { signal: options?.signal });
@@ -573,6 +598,23 @@ function streamCustomAnthropic(
 			stream.end();
 		} catch (error) {
 			for (const block of output.content) delete (block as any).index;
+
+			// Clean up incomplete blocks from aborted streams:
+			// 1. Remove thinking blocks that have a signature but empty/blank text.
+			//    These occur when the user aborts mid-stream during thinking_delta
+			//    but after signature_delta, leaving an invalid empty-thinking+signature.
+			// 2. Remove toolCall blocks that have no arguments (aborted during input_json_delta).
+			//    These would cause "tool_use without tool_result" errors on retry.
+			output.content = output.content.filter((b: any) => {
+				if (b.type === "thinking" && b.thinkingSignature && !b.thinking?.trim()) {
+					return false;
+				}
+				if (b.type === "toolCall" && b.partialJson !== undefined && !Object.keys(b.arguments || {}).length) {
+					return false;
+				}
+				return true;
+			});
+
 			output.stopReason = options?.signal?.aborted ? "aborted" : "error";
 			output.errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 			stream.push({ type: "error", reason: output.stopReason, error: output });
@@ -589,26 +631,26 @@ function streamCustomAnthropic(
 
 export default function (pi: ExtensionAPI) {
 	pi.registerProvider("custom-anthropic", {
-		baseUrl: "https://dashscope.aliyuncs.com/apps/anthropic",
+		baseUrl: "https://api.deepseek.com/anthropic",
 		apiKey: getApiKey(),
 		api: "custom-anthropic-api",
 
 		models: [
 			{
-				id: "qwen3.5-plus",
-				name: "qwen3.5-plus",
+				id: "deepseek-v4-flash",
+				name: "deepseek-v4-flash",
 				reasoning: true,
 				input: ["text", "image"],
-				cost: { input: 0.8, output: 4.8, cacheRead: 0.08, cacheWrite: 1 },
+				cost: { input: 1, output: 2, cacheRead: 0.2, cacheWrite: 1 },
 				contextWindow: 1000000,
 				maxTokens: 64000,
 			},
 			{
-				id: "qwen3.6-plus",
-				name: "qwen3.6-plus",
+				id: "deepseek-v4-pro",
+				name: "deepseek-v4-pro",
 				reasoning: true,
 				input: ["text", "image"],
-				cost: { input: 2, output: 12, cacheRead: 0.2, cacheWrite: 2.5 },
+				cost: { input: 12, output: 24, cacheRead: 1, cacheWrite: 12 },
 				contextWindow: 1000000,
 				maxTokens: 64000,
 			},

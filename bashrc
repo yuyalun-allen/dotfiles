@@ -108,6 +108,3 @@ if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] &&
 fi
 
 neofetch
-
-# Load pi agent secrets from GNOME Keyring
-source "/home/allen/dotfiles/tools/pi/agent/load-pi-secrets.sh" 2>/dev/null || true

@@ -1,0 +1,50 @@
+{
+  "skill_name": "pi-extension-builder",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I want to create a pi extension that adds a `/note` command and a `note` tool. The extension should let me save short text notes and list them. Notes should survive session reload and branching. When the LLM uses the `note` tool, I want to see the note content nicely formatted in the TUI with a colored prefix. The user should also be able to use `/note list` to see all notes in a nice widget above the editor.",
+      "expected_output": "A complete extension with registerTool and registerCommand, proper state management via tool details, and custom TUI rendering",
+      "files": [],
+      "expectations": [
+        "The extension exports a default function accepting ExtensionAPI",
+        "The extension registers a 'note' tool with action parameter (add/list/delete)",
+        "The extension uses StringEnum for the action parameter",
+        "The extension stores state in tool result details (not external files)",
+        "The extension reconstructs state from session on session_start and session_tree",
+        "The extension has custom renderCall and renderResult for the note tool",
+        "The extension registers a '/note' command",
+        "The '/note' command shows a widget via ctx.ui.setWidget"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need a pi extension that intercepts bash tool calls and checks if the command references files in a protected list (e.g., '/etc/passwd', '.env'). If it does, it should ask the user for confirmation before allowing the command to proceed. In non-interactive mode, it should block automatically. The extension should also register a `/protect add <path>` and `/protect remove <path>` command so users can manage the protected file list dynamically.",
+      "expected_output": "A complete extension with on('tool_call') for bash interception, ctx.ui.confirm for confirmation, and registerCommand for managing protected paths",
+      "files": [],
+      "expectations": [
+        "The extension registers a '/protect' command with add/remove/list subcommands",
+        "The extension uses pi.on('tool_call') to intercept bash commands",
+        "The extension checks bash commands against a protected file list",
+        "The extension uses ctx.ui.confirm to ask for permission interactively",
+        "The extension checks ctx.hasUI and blocks automatically when UI is not available",
+        "The extension returns { block: true } when the user denies or in non-interactive mode"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I want to create a pi extension that integrates with a hypothetical internal API at https://api.corp.example.com. It should register a custom provider for our internal models, and also register a `corp_search` tool that queries the internal knowledge base API and returns formatted results. The tool needs to handle API errors gracefully and tell the LLM exactly what went wrong and how to fix it.",
+      "expected_output": "A complete extension with pi.registerProvider for custom models and a corp_search tool with proper error handling",
+      "files": [],
+      "expectations": [
+        "The extension uses pi.registerProvider to register a custom provider",
+        "The provider has a baseUrl, apiKey, api type, and model definitions",
+        "The extension registers a 'corp_search' tool with Type.Object parameters",
+        "The tool handles errors by throwing (signals isError=true)",
+        "Error messages are actionable (tell LLM what went wrong and how to fix)",
+        "The tool respects ctx.signal for cancellation",
+        "The extension checks ctx.hasUI before using dialogs"
+      ]
+    }
+  ]
+}

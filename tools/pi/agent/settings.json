@@ -1,7 +1,8 @@
 {
-  "lastChangelogVersion": "0.65.0",
+  "lastChangelogVersion": "0.67.6",
   "defaultProvider": "custom-anthropic",
-  "defaultModel": "qwen3.5-plus",
-  "defaultThinkingLevel": "medium",
-  "hideThinkingBlock": false
+  "defaultModel": "deepseek-v4-pro",
+  "defaultThinkingLevel": "low",
+  "hideThinkingBlock": false,
+  "packages": []
 }
