@@ -101,10 +101,23 @@ alias list="pushd $HOME/Desktop/rule-book && vim LIST.md"
 alias show="pushd $HOME/Desktop/rule-book && vim SHOW.md"
 alias memo="pushd $HOME/Desktop/rule-book && vim MEMO.md"
 
+# Quick bash command lookup via pi
+how() { pi -p "写一个 bash 命令：$*。给出命令和解释，我用的 Arch Linux。"; }
+
 # auto-starts
 
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [[ "$TERM_PROGRAM" != "vscode" ]] ;then
   exec tmux
 fi
+
+alias ascii-art='tmux new-window -n ascii-art \; \
+  split-window -h \; \
+  split-window -v -t 0 \; \
+  split-window -v -t 2 \; \
+  resize-pane -t 0 -y 32 \; \
+  send-keys -t 0 "pi" Enter \; \
+  send-keys -t 1 "CACA_DRIVER=slang cacafire" Enter \; \
+  send-keys -t 2 "terminal-rain" Enter \; \
+  send-keys -t 3 "asciiquarium" Enter'
 
 neofetch

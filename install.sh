@@ -78,27 +78,15 @@ ln -sf "$DOTFILES_DIR/tools/pi/agent/APPEND_SYSTEM.md" "$PI_AGENT_CONFIG/APPEND_
 ln -sf "$DOTFILES_DIR/tools/pi/agent/skills" "$PI_AGENT_CONFIG/skills"
 ln -sf "$DOTFILES_DIR/tools/pi/agent/pi-permissions.jsonc" "$PI_AGENT_CONFIG/pi-permissions.jsonc"
 
-# Install extensions
+# Install extensions (symlinked)
 echo "Installing extensions..."
+rm -rf "$PI_AGENT_CONFIG/extensions"
+ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions" "$PI_AGENT_CONFIG/extensions"
 
-# custom-anthropic (with npm dependencies)
-CUSTOM_ANTHROPIC_EXT="$PI_AGENT_CONFIG/extensions/custom-anthropic"
-if [ -f "$DOTFILES_DIR/tools/pi/agent/extensions/custom-anthropic/package.json" ]; then
-  echo "  Installing custom-anthropic..."
-  mkdir -p "$CUSTOM_ANTHROPIC_EXT"
-  rm -f "$CUSTOM_ANTHROPIC_EXT"/*.ts "$CUSTOM_ANTHROPIC_EXT"/*.json 2>/dev/null
-  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/custom-anthropic/index.ts" "$CUSTOM_ANTHROPIC_EXT/index.ts"
-  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/custom-anthropic/package.json" "$CUSTOM_ANTHROPIC_EXT/package.json"
-  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/custom-anthropic/package-lock.json" "$CUSTOM_ANTHROPIC_EXT/package-lock.json"
-  (cd "$CUSTOM_ANTHROPIC_EXT" && npm install --silent 2>/dev/null) || true
-fi
-
-# permission-gate (bash + write + edit confirmation)
-PERMISSION_GATE_EXT="$PI_AGENT_CONFIG/extensions/permission-gate"
-if [ -f "$DOTFILES_DIR/tools/pi/agent/extensions/permission-gate/index.ts" ]; then
-  echo "  Installing permission-gate..."
-  mkdir -p "$PERMISSION_GATE_EXT"
-  ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions/permission-gate/index.ts" "$PERMISSION_GATE_EXT/index.ts"
+# npm install for custom-anthropic
+if [ -f "$PI_AGENT_CONFIG/extensions/custom-anthropic/package.json" ]; then
+  echo "  Installing npm dependencies for custom-anthropic..."
+  (cd "$PI_AGENT_CONFIG/extensions/custom-anthropic" && npm install --silent 2>/dev/null) || true
 fi
 
 echo "Dotfiles successfully linked to XDG directories."

@@ -1,8 +1,12 @@
 {
-  "lastChangelogVersion": "0.67.6",
-  "defaultProvider": "custom-anthropic",
-  "defaultModel": "deepseek-v4-pro",
+  "lastChangelogVersion": "0.80.6",
+  "defaultProvider": "deepseek",
+  "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "low",
   "hideThinkingBlock": false,
-  "packages": []
+  "packages": [
+    "git:github.com/obra/superpowers",
+    "npm:pi-subagents"
+  ],
+  "theme": "dark"
 }

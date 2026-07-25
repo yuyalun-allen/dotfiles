@@ -47,7 +47,7 @@ nmap ! :!
 command W w !sudo tee % > /dev/null
 
 " Use system clipboard
-set clipboard+=unnamedplus
+set clipboard=unnamedplus
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => VIM user interface
@@ -403,3 +403,47 @@ let g:vimtex_quickfix_open_on_warning = 0
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " 仅在编辑 TeX 文件时加载并启动 coc.nvim
 autocmd FileType tex,java packadd coc.nvim
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Wayland clipboard via wl-clipboard (from :help wayland)
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" 当 compositor 不支持 wlr-data-control/ext-data-control 协议时，
+" 通过 wl-copy/wl-paste 实现系统剪贴板（GNOME/Mutter 需要此项）
+if executable('wl-copy') && executable('wl-paste')
+  func! s:WlAvailable()
+    return v:true
+  endfunc
+
+  func! s:WlCopy(reg, type, lines)
+    let args = 'wl-copy'
+    if a:reg == '*'
+      let args = args .. ' -p'
+    endif
+    call system(args, join(a:lines, "\n"))
+  endfunc
+
+  func! s:WlPaste(reg)
+    let args = 'wl-paste --type text/plain;charset=utf-8'
+    if a:reg == '*'
+      let args = args .. ' -p'
+    endif
+    let lines = systemlist(args)
+    if v:shell_error
+      return ['', ['']]
+    endif
+    return ['', lines]
+  endfunc
+
+  let v:clipproviders['wl_clipboard'] = {
+        \   'available': function('s:WlAvailable'),
+        \   'copy': {
+        \     '+': function('s:WlCopy'),
+        \     '*': function('s:WlCopy')
+        \   },
+        \   'paste': {
+        \     '+': function('s:WlPaste'),
+        \     '*': function('s:WlPaste')
+        \   }
+        \ }
+  set clipmethod^=wl_clipboard
+endif
