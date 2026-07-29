@@ -1,0 +1,52 @@
+{
+  "skill_name": "paper-reading",
+  "evals": [
+    {
+      "id": 1,
+      "name": "方法研究-arxiv-url",
+      "prompt": "帮我看看这篇论文说什么：https://arxiv.org/abs/1706.03762",
+      "expected_output": "生成 'Attention-Is-All-You-Need-summary.md'，总结 Transformer 论文的内容，分类为方法研究，包含模型架构、训练方法、实验设置、机器翻译结果等",
+      "files": [],
+      "expectations": [
+        "输出文件名包含 'Attention-Is-All-You-Need'",
+        "文件开头包含 '方法研究' 分类",
+        "包含 '摘要' 部分",
+        "包含方法概述（Transformer 架构、自注意力机制、多头注意力）",
+        "包含数据集描述（WMT 2014 英德/英法）",
+        "包含评估指标（BLEU）和基线对比",
+        "包含局限性和未来工作",
+        "全文使用中文"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "经验研究-pdf文件",
+      "prompt": "帮我总结一下这篇论文 ~/Downloads/some-empirical-study.pdf，这是一篇关于开发者经验的论文",
+      "expected_output": "生成 '-summary.md'，正确识别为经验研究，包含研究问题、数据收集方法、数据分析方法、发现等",
+      "files": [],
+      "expectations": [
+        "正确识别论文为经验研究类型",
+        "包含研究问题描述",
+        "包含数据收集方法（问卷/访谈/代码仓库挖掘等）",
+        "包含数据分析方法",
+        "包含主要发现",
+        "包含效度威胁讨论",
+        "全文使用中文"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "简短询问-arxiv-pdf",
+      "prompt": "这篇论文讲了啥？https://arxiv.org/pdf/2106.09685.pdf",
+      "expected_output": "生成对应的 -summary.md 文件，总结 LoRA 论文的内容",
+      "files": [],
+      "expectations": [
+        "正确从 URL 提取 arXiv ID",
+        "生成合法的 Markdown 文件",
+        "包含摘要和核心贡献",
+        "包含方法概述",
+        "全文使用中文"
+      ]
+    }
+  ]
+}

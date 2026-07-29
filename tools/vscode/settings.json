@@ -100,4 +100,5 @@
     "geminicodeassist.project": "analog-audio-xfgnf",
     "geminicodeassist.inlineSuggestions.enableAuto": false,
     "chat.viewSessions.orientation": "stacked",
+    "workbench.layoutControl.enabled": false,
 }

@@ -107,7 +107,7 @@ how() { pi -p "写一个 bash 命令：$*。给出命令和解释，我用的 Ar
 # auto-starts
 
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [[ "$TERM_PROGRAM" != "vscode" ]] ;then
-  exec tmux
+  tmux
 fi
 
 alias ascii-art='tmux new-window -n ascii-art \; \

@@ -270,25 +270,21 @@ function convertMessages(messages: Message[], isOAuth: boolean, thinkingEnabled:
 					// This applies even when thinking mode is disabled for the
 					// current request, because the block was already returned
 					// by the API in a previous turn.
+					//
+					// This includes blocks where thinking text is empty or
+					// whitespace-only. DeepSeek API sometimes returns such
+					// blocks (e.g. when interleaving thinking with tool use),
+					// and requires them to be passed back unmodified.
+					// Dropping them causes:
+					//   400 "The `content[].thinking` in the thinking mode
+					//   must be passed back to the API."
 					if ((block as ThinkingContent).thinkingSignature) {
-						// Only pass back if thinking text is non-empty.
-						// Empty thinking + signature can occur when:
-						// - The request was aborted mid-stream (after signature_delta
-						//   but before any thinking_delta with actual text)
-						// - DeepSeek API returns a valid thinking block header but
-						//   zero-length thinking text (e.g., interleaved with tools)
-						// Passing empty thinking back causes 400 errors from DeepSeek.
-						if (block.thinking.trim()) {
-							blocks.push({
-								type: "thinking" as any,
-								thinking: sanitizeSurrogates(block.thinking),
-								signature: (block as ThinkingContent).thinkingSignature!,
-							});
-						}
-						// If thinking text is empty, drop the block entirely.
-						// The API won't complain because the block was never
-						// properly emitted (it was either aborted or zero-length).
-					} else if (block.thinking.trim()) {
+						blocks.push({
+							type: "thinking" as any,
+							thinking: sanitizeSurrogates(block.thinking || ""),
+							signature: (block as ThinkingContent).thinkingSignature!,
+						});
+					} else if (block.thinking?.trim()) {
 						// No signature: this is internal reasoning without API
 						// verification. Convert to text so it appears in context.
 						blocks.push({ type: "text", text: sanitizeSurrogates(block.thinking) });
@@ -600,15 +596,15 @@ function streamCustomAnthropic(
 			for (const block of output.content) delete (block as any).index;
 
 			// Clean up incomplete blocks from aborted streams:
-			// 1. Remove thinking blocks that have a signature but empty/blank text.
-			//    These occur when the user aborts mid-stream during thinking_delta
-			//    but after signature_delta, leaving an invalid empty-thinking+signature.
-			// 2. Remove toolCall blocks that have no arguments (aborted during input_json_delta).
+			// 1. Remove toolCall blocks that have no arguments (aborted during input_json_delta).
 			//    These would cause "tool_use without tool_result" errors on retry.
+			//
+			// Note: we NO LONGER remove thinking blocks with signature but
+			// empty/blank text. Even empty thinking blocks with signatures
+			// must be passed back to the API on the next turn. DeepSeek API
+			// rejects requests that drop them. The signature was already
+			// issued — the API expects the block to be round-tripped.
 			output.content = output.content.filter((b: any) => {
-				if (b.type === "thinking" && b.thinkingSignature && !b.thinking?.trim()) {
-					return false;
-				}
 				if (b.type === "toolCall" && b.partialJson !== undefined && !Object.keys(b.arguments || {}).length) {
 					return false;
 				}
