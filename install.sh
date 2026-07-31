@@ -52,24 +52,56 @@ tools/vscode/code-flags.conf|$XDG_CONFIG_HOME/code-flags.conf
 EOF
 
 # 3. vim 插件（vendor pack 结构）
+# LSP 已从 vim-lsp 生态迁移到 coc.nvim（见 tools/vim/vimrc 的 LSP settings 段）
 VIM_PLUGIN_START_HOME="$XDG_DATA_HOME/vim/pack/vendor/start"
-VIM_PLUGIN_OPT_HOME="$XDG_DATA_HOME/vim/pack/vendor/opt"
-mkdir -p "$VIM_PLUGIN_START_HOME" "$VIM_PLUGIN_OPT_HOME"
+VIM_PLUGIN_OPT_HOME="$XDG_DATA_HOME/vim/pack/vendor/opt"  # 已废弃（coc 移入 start），仅用于清理旧目录
+mkdir -p "$VIM_PLUGIN_START_HOME"
 
 for repo in \
   https://github.com/NLKNguyen/papercolor-theme.git \
-  https://github.com/prabirshrestha/vim-lsp.git \
   https://github.com/dense-analysis/ale.git \
-  https://github.com/rhysd/vim-lsp-ale.git \
-  https://github.com/prabirshrestha/asyncomplete.vim.git \
-  https://github.com/prabirshrestha/asyncomplete-lsp.vim.git \
   https://github.com/airblade/vim-gitgutter.git \
-  https://github.com/jasonccox/vim-wayland-clipboard.git \
   https://github.com/img-paste-devs/img-paste.vim.git \
-  https://github.com/lervag/vimtex.git; do
+  https://github.com/lervag/vimtex.git \
+  https://github.com/liuchengxu/vim-clap.git \
+  https://github.com/neoclide/coc.nvim.git; do
   clone "$repo" "$VIM_PLUGIN_START_HOME/$(basename "$repo" .git)"
 done
-clone https://github.com/neoclide/coc.nvim.git "$VIM_PLUGIN_OPT_HOME/coc.nvim"
+
+# 清理已废弃的 vim-lsp 生态插件目录（旧安装残留；ale 保留）
+for stale in vim-lsp vim-lsp-ale asyncomplete.vim asyncomplete-lsp.vim; do
+  if [ -d "$VIM_PLUGIN_START_HOME/$stale" ]; then
+    rm -rf "$VIM_PLUGIN_START_HOME/$stale"
+    echo "  ✓ 移除废弃插件: $stale"
+  fi
+done
+rm -rf "$VIM_PLUGIN_OPT_HOME" 2>/dev/null || true
+
+# 3.5 vim-clap 专用步骤：安装必须的 Rust 二进制 maple
+# 官方文档: "the Rust binary maple is a must-have for ensuring smooth and optimal functionality"
+# 方式: 先尝试下载预编译二进制（install.sh），失败则用 cargo 本地编译
+VIM_CLAP_DIR="$VIM_PLUGIN_START_HOME/vim-clap"
+if [ -d "$VIM_CLAP_DIR" ]; then
+  if [ -x "$VIM_CLAP_DIR/bin/maple" ]; then
+    echo "  ✓ vim-clap: maple 二进制已存在"
+  else
+    echo "  Installing vim-clap maple binary..."
+    if (cd "$VIM_CLAP_DIR" && bash install.sh); then
+      echo "  ✓ vim-clap: maple 预编译二进制安装完成"
+    elif (cd "$VIM_CLAP_DIR" && cargo build --release && mkdir -p bin && cp target/release/maple bin/maple); then
+      echo "  ✓ vim-clap: maple 由 cargo 编译完成"
+    else
+      echo "  ✗ vim-clap: maple 安装失败，请在 vim 中运行 :Clap install-binary"
+    fi
+  fi
+else
+  echo "  ✗ vim-clap 未成功克隆，跳过 maple 安装"
+fi
+
+# vim-clap 需要 Python 3 支持（Vim 需 +python3 编译；Neovim 需 pynvim）
+if command -v vim >/dev/null 2>&1 && ! vim --version | grep -q '+python3'; then
+  echo "  ⚠ 提示: vim 缺少 +python3 支持，vim-clap 的部分 provider 不可用"
+fi
 
 # 4. pi coding agent
 PI_AGENT_CONFIG="$XDG_CONFIG_HOME/pi/agent"

@@ -1,3 +1,7 @@
 {
-  "suggest.noselect": true
+  "java.configuration.maven.userSettings": "/home/allen/.config/maven/settings.xml",
+  "java.configuration.maven.globalSettings": "",
+  "clangd.semanticHighlighting": true,
+  "clangd.arguments": ["--background-index", "--enable-config"],
+  "notification.statusLineProgress": true
 }

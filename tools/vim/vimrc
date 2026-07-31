@@ -289,84 +289,93 @@ let g:clap_plugin_experimental = v:true
 "    autocmd FileType python,go ClapAction syntax.treeSitterHighlight
 "augroup END
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => Copilot settings
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => LSP settings (coc.nvim)
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" coc 在 pack/vendor/start 下自动加载（全局服务）
+set signcolumn=yes
 
-let g:copilot_enabled = v:false
+" 快捷键从 vim-lsp 迁移而来，语义一一对应：
+"   gd 定义    gs 文档符号(outline)   gS 工作区符号
+"   gr 引用    gi 实现                gD 类型定义
+"   <leader>fx 代码操作   <leader>rn 重命名
+"   [g / ]g 上/下一个诊断    K 悬浮文档
+"   <C-f>/<C-b> 滚动悬浮窗
+nmap <silent><nowait> gd <Plug>(coc-definition)
+nmap <silent><nowait> gs :CocList outline<CR>
+nnoremap <silent><nowait> gS :CocList symbols<CR>
+nmap <silent><nowait> gr <Plug>(coc-references)
+nmap <silent><nowait> gi <Plug>(coc-implementation)
+nmap <silent><nowait> gD <Plug>(coc-type-definition)
+nmap <silent><nowait> <leader>fx <Plug>(coc-codeaction)
+nmap <silent><nowait> <leader>rn <Plug>(coc-rename)
+nmap <silent><nowait> [g <Plug>(coc-diagnostic-prev)
+nmap <silent><nowait> ]g <Plug>(coc-diagnostic-next)
 
-
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => LSP settings
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Key mappings
-
-function! s:on_lsp_buffer_enabled() abort
-    setlocal omnifunc=lsp#complete
-    setlocal signcolumn=yes
-    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
-    nmap <buffer> gd <plug>(lsp-definition)
-    nmap <buffer> gs <plug>(lsp-document-symbol-search)
-    nmap <buffer> gS <plug>(lsp-workspace-symbol-search)
-    nmap <buffer> gr <plug>(lsp-references)
-    nmap <buffer> gi <plug>(lsp-implementation)
-    nmap <buffer> gD <plug>(lsp-type-definition)
-    nmap <buffer> <leader>fx <plug>(lsp-code-action)
-    nmap <buffer> <leader>rn <plug>(lsp-rename)
-    nmap <buffer> [g <plug>(lsp-previous-diagnostic)
-    nmap <buffer> ]g <plug>(lsp-next-diagnostic)
-    nmap <buffer> K <plug>(lsp-hover)
-    nnoremap <buffer> <expr><c-f> lsp#scroll(+4)
-    nnoremap <buffer> <expr><c-b> lsp#scroll(-4)
-
-    let g:lsp_format_sync_timeout = 1000
-    autocmd! BufWritePre *.rs,*.go call execute('LspDocumentFormatSync')
-    
-    " refer to doc to add more commands
+" 悬浮文档：有 hover 服务时显示，否则回退内置 K
+nnoremap <silent> K :call ShowDocumentation()<CR>
+function! ShowDocumentation() abort
+    if CocAction('hasProvider', 'hover')
+        call CocActionAsync('doHover')
+    else
+        call feedkeys('K', 'in')
+    endif
 endfunction
 
-augroup lsp_install
-    au!
-    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
-    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
-augroup END
 
-" Fold action
-" set foldmethod=expr
-"   \ foldexpr=lsp#ui#vim#folding#foldexpr()
-"   \ foldtext=lsp#ui#vim#folding#foldtext()
+" 滚动悬浮窗（无可滚动窗口时回退原生 <C-f>/<C-b>）
+nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
 
-" For asyncomplete
-inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
-inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
+" tagfunc：CTRL-] / g] 走 coc，无结果时回退原生 tag
+if exists('&tagfunc')
+    set tagfunc=CocTagFunc
+endif
 
-let g:lsp_semantic_enabled = 1
-let g:lsp_settings_disabled = ['digestif']
+" 保存时格式化（对应原 LspDocumentFormatSync）
+autocmd BufWritePre *.go,*.rs call CocActionAsync('format')
 
-" let g:lsp_log_verbose = 1
-" let g:lsp_log_file = expand('/tmp/vim-lsp.log')
-" nnoremap <leader>sl :split /tmp/vim-lsp.log<CR>
+" 折叠：z 命令为 Vim 内置，coc 不干预
+" 默认全部展开，用 z 命令（zc/zo/za/zM/zR/zj/zk）手动折叠
+set foldmethod=indent
+set foldlevelstart=99
+" LSP 语义折叠（替代 vim-lsp 时代的 expr folding）：
+" ,z = 首次生成语言服务器折叠；之后再按则像 za 一样切换光标处折叠。
+function! s:coc_fold() abort
+    if !CocAction('hasProvider', 'foldingRange')
+        echo '当前 buffer 无 foldingRange 支持'
+        return
+    endif
+    " 首次（或折叠被清除后）先生成 LSP 折叠
+    if !exists('b:coc_lsp_folds') || !b:coc_lsp_folds || &foldmethod !=# 'manual'
+        if CocAction('fold')
+            let b:coc_lsp_folds = 1
+        endif
+    endif
+    " za：切换光标处折叠（光标处无折叠时跳过，避免 E490）
+    if foldclosed('.') >= 0 || foldlevel('.') > 0
+        normal! za
+    endif
+endfunction
+nnoremap <silent> <leader>z :call <SID>coc_fold()<CR>
 
+" 状态栏集成 coc：显示语言服务器状态与索引进度（需 coc-settings.json 的
+" notification.statusLineProgress: true）。索引中的服务（如 clangd 建索引）
+" 会在此显示百分比进度。
+set statusline=%{mode()}\ %{coc#status()}\ %f\ %m\ %=%l/%L\ %P
+autocmd User CocStatusChange redrawstatus
 
-" Semantic highlight
+" 主流语言打开后自动生成 LSP 语义折叠：
+" 延迟轮询等语言服务器就绪（hasProvider 为真）后执行 CocAction('fold')，
+" 生成后折叠默认展开（foldlevelstart=99），用 za/zc/zo 随时切换；
+" 服务器一直未就绪则静默放弃（仍可用 ,z 手动生成）。
+" 补全菜单按键（coc 版本）
+inoremap <silent><expr> <Tab>   coc#pum#visible() ? coc#pum#next(1) : "\<Tab>"
+inoremap <silent><expr> <S-Tab> coc#pum#visible() ? coc#pum#prev(1) : "\<S-Tab>"
+inoremap <silent><expr> <cr>    coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
 
-let g:lsp_settings = {
-  \ 'clangd': {
-  \   'semantic_highlighting': {
-  \     'Function': 'Function',
-  \     'Variable': 'Variable'
-  \ }}}
-
-let g:lsp_settings['eclipse-jdt-ls'] = {
-\  'java': {
-\    'configuration': {
-\      'maven': {
-\        'userSettings': expand('~/.config/maven/settings.xml')
-\      }
-\    }
-\  }
-\ }
+" 以下 g:lsp_settings 等为 vim-lsp 旧版 API，已随插件移除；
+" semantic highlight 由 coc 自动支持；Java/Maven 配置在 coc-settings.json。
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => For markdown
@@ -398,11 +407,6 @@ let g:vimtex_compiler_latexmk_engines = {
       \ '_': '-xelatex',
       \}
 let g:vimtex_quickfix_open_on_warning = 0
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => For coc.nvim
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" 仅在编辑 TeX 文件时加载并启动 coc.nvim
-autocmd FileType tex,java packadd coc.nvim
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Wayland clipboard via wl-clipboard (from :help wayland)
