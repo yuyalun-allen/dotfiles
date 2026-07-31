@@ -56,6 +56,65 @@
           }
         }
       ]
+    },
+    "bailian": {
+      "baseUrl": "https://llm-zayh9xugy9v0ge0t.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+      "api": "openai-completions",
+      "apiKey": "!secret-tool lookup service bailian",
+      "models": [
+        {
+          "id": "deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "input": ["text"],
+          "reasoning": true,
+          "cost": {
+            "input": 1.74,
+            "output": 3.48,
+            "cacheRead": 0.145,
+            "cacheWrite": 0
+          },
+          "thinkingLevelMap": {
+            "minimal": "high",
+            "low": "high",
+            "medium": "high",
+            "high": "high",
+            "xhigh": "max"
+          },
+          "compat": {
+            "requiresReasoningContentOnAssistantMessages": true,
+            "thinkingFormat": "deepseek",
+            "supportsDeveloperRole": false
+          }
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash",
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "input": ["text"],
+          "reasoning": true,
+          "cost": {
+            "input": 0.14,
+            "output": 0.28,
+            "cacheRead": 0.028,
+            "cacheWrite": 0
+          },
+          "thinkingLevelMap": {
+            "minimal": "high",
+            "low": "high",
+            "medium": "high",
+            "high": "high",
+            "xhigh": "max"
+          },
+          "compat": {
+            "requiresReasoningContentOnAssistantMessages": true,
+            "thinkingFormat": "deepseek",
+            "supportsDeveloperRole": false
+          }
+        }
+      ]
     }
   }
 }

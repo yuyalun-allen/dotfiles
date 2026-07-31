@@ -1,6 +1,6 @@
 {
   "lastChangelogVersion": "0.82.0",
-  "defaultProvider": "deepseek",
+  "defaultProvider": "bailian",
   "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "low",
   "hideThinkingBlock": true,
