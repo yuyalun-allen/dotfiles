@@ -1,92 +1,96 @@
 #!/bin/bash
 
 # installation script for dotfiles
-DOTFILES_DIR=$(pwd)
-if [ ! -f "$DOTFILES_DIR/install.sh" ]; then
-  echo "Error: This script must be run from the dotfiles directory."
-  exit 1
-fi
+# 从任意目录运行均可（脚本自动定位仓库根目录）
+set -u
 
-# 1. Configure XDG base directories
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
-mkdir -p "$XDG_CONFIG_HOME"
-mkdir -p "$XDG_DATA_HOME"
+# link <src> <dest>: 创建/刷新软链，自动建父目录，跳过缺失源，防断链
+link() {
+  local src="$1" dest="$2"
+  if [ ! -e "$src" ] && [ ! -L "$src" ]; then
+    echo "  ✗ 跳过: $src 不存在"
+    return
+  fi
+  mkdir -p "$(dirname "$dest")"
+  rm -rf "$dest"          # 清理旧软链/目录残留
+  ln -sfn "$src" "$dest"
+  echo "  ✓ $dest"
+}
 
-# 2. Shell
-git clone --depth=1 https://github.com/basecamp/omarchy.git "$XDG_DATA_HOME/omarchy" 2>/dev/null || true
-ln -sf "$DOTFILES_DIR/bash_profile" "$HOME/.bash_profile"
-ln -sf "$DOTFILES_DIR/bashrc" "$HOME/.bashrc"
-ln -sf "$DOTFILES_DIR/profile" "$HOME/.profile"
+# clone <url> <dir>: 幂等克隆
+clone() {
+  git clone --depth=1 "$1" "$2" 2>/dev/null || true
+}
 
-# 3. environment settings
-mkdir -p "$XDG_CONFIG_HOME/fonts"
-ln -sf "$DOTFILES_DIR/env/fonts/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
-mkdir -p "$XDG_CONFIG_HOME/environment.d"
-ln -sf "$DOTFILES_DIR/env/environment.d/general-env.conf" "$XDG_CONFIG_HOME/environment.d/general-env.conf"
-ln -sf "$DOTFILES_DIR/env/environment.d/load-secret-keys.sh" "$XDG_CONFIG_HOME/environment.d/load-secret-keys.sh"
+# 1. Shell
+clone https://github.com/basecamp/omarchy.git "$XDG_DATA_HOME/omarchy"
+link "$DOTFILES_DIR/bash_profile" "$HOME/.bash_profile"
+link "$DOTFILES_DIR/bashrc" "$HOME/.bashrc"
+link "$DOTFILES_DIR/profile" "$HOME/.profile"
 
-# 4. tool settings
-mkdir -p "$XDG_CONFIG_HOME/maven"
-ln -sf "$DOTFILES_DIR/tools/maven/settings.xml" "$XDG_CONFIG_HOME/maven/settings.xml"
-mkdir -p "$XDG_CONFIG_HOME/git"
-ln -sf "$DOTFILES_DIR/tools/git/config" "$XDG_CONFIG_HOME/git/config"
-ln -sf "$DOTFILES_DIR/tools/git/gitignore_global" "$XDG_CONFIG_HOME/git/gitignore_global"
-mkdir -p "$XDG_CONFIG_HOME/kitty"
-ln -sf "$DOTFILES_DIR/tools/kitty/kitty.conf" "$XDG_CONFIG_HOME/kitty/kitty.conf"
-mkdir -p "$XDG_CONFIG_HOME/tmux"
-ln -sf "$DOTFILES_DIR/tools/tmux/tmux.conf" "$XDG_CONFIG_HOME/tmux/tmux.conf"
+# 2. env / tool 配置软链（每行: 仓库相对路径|目标绝对路径）
+while IFS='|' read -r rel dest; do
+  [ -z "$rel" ] && continue
+  link "$DOTFILES_DIR/$rel" "$dest"
+done <<EOF
+env/fonts/fonts.conf|$XDG_CONFIG_HOME/fontconfig/fonts.conf
+env/environment.d/general-env.conf|$XDG_CONFIG_HOME/environment.d/general-env.conf
+tools/maven/settings.xml|$XDG_CONFIG_HOME/maven/settings.xml
+tools/git/config|$XDG_CONFIG_HOME/git/config
+tools/git/gitignore_global|$XDG_CONFIG_HOME/git/gitignore_global
+tools/kitty/kitty.conf|$XDG_CONFIG_HOME/kitty/kitty.conf
+tools/tmux/tmux.conf|$XDG_CONFIG_HOME/tmux/tmux.conf
+tools/vim/vimrc|$XDG_CONFIG_HOME/vim/vimrc
+tools/vim/coc-settings.json|$XDG_CONFIG_HOME/vim/coc-settings.json
+tools/vscode/settings.json|$XDG_CONFIG_HOME/Code/User/settings.json
+tools/vscode/code-flags.conf|$XDG_CONFIG_HOME/code-flags.conf
+EOF
 
-# vim
-echo "Installing recommending vim plugins"
+# 3. vim 插件（vendor pack 结构）
 VIM_PLUGIN_START_HOME="$XDG_DATA_HOME/vim/pack/vendor/start"
 VIM_PLUGIN_OPT_HOME="$XDG_DATA_HOME/vim/pack/vendor/opt"
-mkdir -p "$XDG_CONFIG_HOME/vim"
-mkdir -p $VIM_PLUGIN_START_HOME
-mkdir -p $VIM_PLUGIN_OPT_HOME
-ln -sf "$DOTFILES_DIR/tools/vim/vimrc" "$XDG_CONFIG_HOME/vim/vimrc"
-ln -sf "$DOTFILES_DIR/tools/vim/coc-settings.json" "$XDG_CONFIG_HOME/vim/coc-settings.json"
-pushd $VIM_PLUGIN_START_HOME
-git clone --depth=1 https://github.com/NLKNguyen/papercolor-theme.git 2>/dev/null || true
-git clone --depth=1 https://github.com/prabirshrestha/vim-lsp.git 2>/dev/null || true
-git clone --depth=1 https://github.com/dense-analysis/ale.git 2>/dev/null || true
-git clone --depth=1 https://github.com/rhysd/vim-lsp-ale.git 2>/dev/null || true
-git clone --depth=1 https://github.com/prabirshrestha/asyncomplete.vim.git 2>/dev/null || true
-git clone --depth=1 https://github.com/prabirshrestha/asyncomplete-lsp.vim.git 2>/dev/null || true
-git clone --depth=1 https://github.com/airblade/vim-gitgutter.git 2>/dev/null || true
-git clone --depth=1 https://github.com/jasonccox/vim-wayland-clipboard.git 2>/dev/null || true
-git clone --depth=1 https://github.com/img-paste-devs/img-paste.vim.git 2>/dev/null || true
-git clone --depth=1 https://github.com/lervag/vimtex.git 2>/dev/null || true
-popd
-pushd $VIM_PLUGIN_OPT_HOME
-git clone --depth=1 https://github.com/neoclide/coc.nvim.git 2>/dev/null || true
-popd
+mkdir -p "$VIM_PLUGIN_START_HOME" "$VIM_PLUGIN_OPT_HOME"
 
-# vscode
-mkdir -p "$XDG_CONFIG_HOME/Code/User"
-ln -sf "$DOTFILES_DIR/tools/vscode/settings.json" "$XDG_CONFIG_HOME/Code/User/settings.json"
-ln -sf "$DOTFILES_DIR/tools/vscode/code-flags.conf" "$XDG_CONFIG_HOME/code-flags.conf"
+for repo in \
+  https://github.com/NLKNguyen/papercolor-theme.git \
+  https://github.com/prabirshrestha/vim-lsp.git \
+  https://github.com/dense-analysis/ale.git \
+  https://github.com/rhysd/vim-lsp-ale.git \
+  https://github.com/prabirshrestha/asyncomplete.vim.git \
+  https://github.com/prabirshrestha/asyncomplete-lsp.vim.git \
+  https://github.com/airblade/vim-gitgutter.git \
+  https://github.com/jasonccox/vim-wayland-clipboard.git \
+  https://github.com/img-paste-devs/img-paste.vim.git \
+  https://github.com/lervag/vimtex.git; do
+  clone "$repo" "$VIM_PLUGIN_START_HOME/$(basename "$repo" .git)"
+done
+clone https://github.com/neoclide/coc.nvim.git "$VIM_PLUGIN_OPT_HOME/coc.nvim"
 
-# pi coding agent
-echo "Installing pi coding agent configuration..."
+# 4. pi coding agent
 PI_AGENT_CONFIG="$XDG_CONFIG_HOME/pi/agent"
-rm -rf "$PI_AGENT_CONFIG/skills"
 mkdir -p "$PI_AGENT_CONFIG"
-ln -sf "$DOTFILES_DIR/tools/pi/agent/settings.json" "$PI_AGENT_CONFIG/settings.json"
-ln -sf "$DOTFILES_DIR/tools/pi/agent/APPEND_SYSTEM.md" "$PI_AGENT_CONFIG/APPEND_SYSTEM.md"
-ln -sf "$DOTFILES_DIR/tools/pi/agent/skills" "$PI_AGENT_CONFIG/skills"
-ln -sf "$DOTFILES_DIR/tools/pi/agent/pi-permissions.jsonc" "$PI_AGENT_CONFIG/pi-permissions.jsonc"
+link "$DOTFILES_DIR/tools/pi/agent/settings.json" "$PI_AGENT_CONFIG/settings.json"
+link "$DOTFILES_DIR/tools/pi/agent/APPEND_SYSTEM.md" "$PI_AGENT_CONFIG/APPEND_SYSTEM.md"
+link "$DOTFILES_DIR/tools/pi/agent/models.json" "$PI_AGENT_CONFIG/models.json"
+link "$DOTFILES_DIR/tools/pi/agent/skills" "$PI_AGENT_CONFIG/skills"
+link "$DOTFILES_DIR/tools/pi/agent/extensions" "$PI_AGENT_CONFIG/extensions"
 
-# Install extensions (symlinked)
-echo "Installing extensions..."
-rm -rf "$PI_AGENT_CONFIG/extensions"
-ln -sf "$DOTFILES_DIR/tools/pi/agent/extensions" "$PI_AGENT_CONFIG/extensions"
-
-# npm install for custom-anthropic
-if [ -f "$PI_AGENT_CONFIG/extensions/custom-anthropic/package.json" ]; then
-  echo "  Installing npm dependencies for custom-anthropic..."
-  (cd "$PI_AGENT_CONFIG/extensions/custom-anthropic" && npm install --silent 2>/dev/null) || true
-fi
+# npm install for all extensions (含 package.json 的子目录)
+for ext_dir in "$PI_AGENT_CONFIG"/extensions/*/; do
+  [ -d "$ext_dir" ] || continue
+  [ -f "$ext_dir/package.json" ] || continue
+  ext_name="$(basename "$ext_dir")"
+  if [ -d "$ext_dir/node_modules" ]; then
+    echo "  ✓ $ext_name: node_modules 已存在，跳过"
+  else
+    echo "  Installing npm dependencies for $ext_name..."
+    (cd "$ext_dir" && npm install --silent 2>/dev/null) || true
+  fi
+done
 
 echo "Dotfiles successfully linked to XDG directories."
