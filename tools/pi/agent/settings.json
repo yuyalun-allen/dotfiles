@@ -1,9 +1,9 @@
 {
-  "lastChangelogVersion": "0.80.6",
+  "lastChangelogVersion": "0.82.0",
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "low",
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "packages": [
     "git:github.com/obra/superpowers",
     "npm:pi-subagents"
