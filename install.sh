@@ -69,7 +69,6 @@ tools/vim/vimrc|$XDG_CONFIG_HOME/vim/vimrc
 tools/vim/coc-settings.json|$XDG_CONFIG_HOME/vim/coc-settings.json
 tools/vscode/settings.json|$XDG_CONFIG_HOME/Code/User/settings.json
 tools/vscode/code-flags.conf|$XDG_CONFIG_HOME/code-flags.conf
-# bin 脚本（~/.local/bin 下，经软链指向仓库 bin/）
 bin/summarize_news.sh|$HOME/.local/bin/summarize_news.sh
 bin/summarize_news.py|$HOME/.local/bin/summarize_news.py
 bin/yt_feed.py|$HOME/.local/bin/yt_feed.py
