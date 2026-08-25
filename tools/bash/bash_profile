@@ -17,3 +17,5 @@ export PATH="$GEM_HOME/bin:$PATH"
 export PATH="/home/allen/.local/bin:$PATH"
 
 [[ -f ~/.bashrc ]] && . ~/.bashrc
+
+source /home/allen/.config/broot/launcher/bash/br

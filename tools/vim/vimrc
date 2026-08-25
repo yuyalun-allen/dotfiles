@@ -46,8 +46,8 @@ nmap ! :!
 " (useful for handling the permission-denied error)
 command W w !sudo tee % > /dev/null
 
-" Use system clipboard
-set clipboard=unnamedplus
+" Use system clipboard (unavailable in wayland)
+" set clipboard=unnamedplus
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => VIM user interface
@@ -264,6 +264,7 @@ nmap <M-k> mz:m-2<cr>`z
 vmap <M-k> :m'<-2<cr>`>my`<mzgv`yo`z
 vmap <M-j> :m'>+<cr>`<my`>mzgv`yo`z
 nnoremap <C-w>x <C-w>c
+nnoremap gf :e <cfile><CR>
 
 " Customizing
 set pastetoggle=<F10>
@@ -413,41 +414,240 @@ let g:vimtex_quickfix_open_on_warning = 0
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " 当 compositor 不支持 wlr-data-control/ext-data-control 协议时，
 " 通过 wl-copy/wl-paste 实现系统剪贴板（GNOME/Mutter 需要此项）
-if executable('wl-copy') && executable('wl-paste')
-  func! s:WlAvailable()
-    return v:true
-  endfunc
+" TO BE DONE
+function! GetVisualSelection()
+ let [line_start, col_start] = getpos("'<")[1:2]
+ let [line_end,   col_end]   = getpos("'>")[1:2]
+ let lines = getline(line_start, line_end)
+ if empty(lines)
+   return ''
+ endif
+ " 截掉首行之前和末行之后多余的部分，保留字符级选区
+ let lines[-1] = lines[-1][: col_end - (&selection == 'inclusive' ? 1 : 2)]
+ let lines[0]  = lines[0][col_start - 1:]
+ return join(lines, "\n")
+endfunction
 
-  func! s:WlCopy(reg, type, lines)
-    let args = 'wl-copy'
-    if a:reg == '*'
-      let args = args .. ' -p'
-    endif
-    call system(args, join(a:lines, "\n"))
-  endfunc
+vnoremap <leader>c :<C-u>call system('wl-copy', GetVisualSelection())<CR>
 
-  func! s:WlPaste(reg)
-    let args = 'wl-paste --type text/plain;charset=utf-8'
-    if a:reg == '*'
-      let args = args .. ' -p'
-    endif
-    let lines = systemlist(args)
-    if v:shell_error
-      return ['', ['']]
-    endif
-    return ['', lines]
-  endfunc
 
-  let v:clipproviders['wl_clipboard'] = {
-        \   'available': function('s:WlAvailable'),
-        \   'copy': {
-        \     '+': function('s:WlCopy'),
-        \     '*': function('s:WlCopy')
-        \   },
-        \   'paste': {
-        \     '+': function('s:WlPaste'),
-        \     '*': function('s:WlPaste')
-        \   }
-        \ }
-  set clipmethod^=wl_clipboard
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => pi-review：在 vim 中调用 pi（--mode json 流式）复盘当前内容
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" 用法:
+"   :PiReview              复盘整个 buffer（chapter，流式输出到下方窗口）
+"   :PiReviewSentence      复盘当前行（微距）
+"   :PiReviewParagraph     复盘当前段（到下个空行，中距）
+"   :PiReviewChapter       复盘整个 buffer（宏观）
+"   :PiReviewFocus <词>    复盘整个 buffer 并重点关注某方面
+"   :'<,'>PiReviewSelection 复盘显式选中的内容
+" 依赖: pi 在 PATH 中；三个粒度分别用不同的 prompt template（可改 g:pi_review_*_template）
+" 行为: 内容写临时文件 -> 管道给 `pi -nt -ns -ne --mode json`
+"       -> 后台 job 写 jsonl 到文件，定时器轮询增量渲染（流式）
+"
+if !exists('g:loaded_pi_review')
+let g:loaded_pi_review = 1
+
+let s:pi = get(g:, 'pi_executable', 'pi')
+let s:provider = get(g:, 'pi_review_provider', 'bailian')
+let s:model = get(g:, 'pi_review_model', 'qwen3.7-flash')
+" 三个粒度的提示词模板：sentence(当前行) / paragraph(到下个空行) / chapter(整个buffer)
+let s:tmpls = {
+      \ 'sentence': get(g:, 'pi_review_sentence_template',
+      \   expand('~') . '/.config/pi/agent/prompts/review-sentence.md'),
+      \ 'paragraph': get(g:, 'pi_review_paragraph_template',
+      \   expand('~') . '/.config/pi/agent/prompts/review-paragraph.md'),
+      \ 'chapter': get(g:, 'pi_review_chapter_template',
+      \   expand('~') . '/.config/pi/agent/prompts/review.md'),
+      \ }
+let s:labels = {'sentence': '句', 'paragraph': '段', 'chapter': '篇'}
+let s:directive = get(g:, 'pi_review_directive',
+      \ '立即直接对上面的内容执行复盘任务并输出，不要提问、不要反问、不要寒暄。')
+
+" 运行时状态
+let s:acc = ''        " 当前已渲染的助手文本
+let s:bnum = -1       " 输出 buffer 号
+let s:done = v:false
+let s:outfile = ''    " pi json 输出文件（由定时器轮询）
+let s:pend = ''       " 未拆完的 jsonl 缓冲
+let s:processed = 0   " 已消费的字节数
+let s:timer = -1      " 轮询定时器 id
+let s:job = v:null
+
+" 命令构建：内容 -> 临时文件 -> 管道给 pi，json 事件写 s:outfile；结束后清理临时文件
+function! s:pi_build_cmd(lines, focus, tmpl) abort
+  let l:tmp = tempname()
+  call writefile(a:lines, l:tmp)
+  let l:msg = s:directive
+  if a:focus !=# ''
+    let l:msg = '【关注点】' . a:focus . '。' . l:msg
+  endif
+  let l:cmd = printf('cat %s | %s -nt -ns -ne --provider %s --model %s --mode json --append-system-prompt %s -p %s > %s; rm -f %s',
+        \ shellescape(l:tmp), shellescape(s:pi), shellescape(s:provider), shellescape(s:model),
+        \ shellescape(a:tmpl), shellescape(l:msg), shellescape(s:outfile), shellescape(l:tmp))
+  return l:cmd
+endfunction
+
+" 从 message_update 事件取当前助手可见文本（只取 text 块，忽略 thinking）
+" 注意：用 get() 函数嵌套，不要用 {}.get() 链式方法（vim 会报 E716）
+function! s:pi_extract_text(ev) abort
+  let l:ae = get(a:ev, 'assistantMessageEvent', {})
+  let l:content = get(get(l:ae, 'partial', {}), 'content', [])
+  if empty(l:content)
+    let l:content = get(get(a:ev, 'message', {}), 'content', [])
+  endif
+  let l:out = []
+  for l:b in l:content
+    if get(l:b, 'type', '') ==# 'text'
+      call add(l:out, get(l:b, 'text', ''))
+    endif
+  endfor
+  return join(l:out, '')
+endfunction
+
+" 把最新文本写入输出 buffer（内容变化才写，减少闪烁）
+function! s:pi_render(text) abort
+  if s:bnum <= 0 || !bufexists(s:bnum) | return | endif
+  if a:text ==# s:acc | return | endif
+  let s:acc = a:text
+  let l:lines = split(a:text, "\n", 1)
+  if empty(l:lines) | let l:lines = [''] | endif
+  call deletebufline(s:bnum, 1, '$')
+  call setbufline(s:bnum, 1, l:lines)
+endfunction
+
+" 轮询输出文件：增量读新字节，拆行解析 JSON 事件并渲染
+function! s:pi_poll(id) abort
+  if s:outfile ==# '' || !filereadable(s:outfile)
+    " 进程结束且无文件时直接收尾
+    if s:job != v:null && job_status(s:job) ==# 'dead'
+      call s:pi_finish()
+    endif
+    return
+  endif
+  let l:new = system('tail -c +' . (s:processed + 1) . ' ' . shellescape(s:outfile))
+  let s:processed = getfsize(s:outfile)
+  if l:new ==# ''
+    if s:job != v:null && job_status(s:job) ==# 'dead'
+      call s:pi_finish()
+    endif
+    return
+  endif
+  let s:pend .= l:new
+  while 1
+    let l:i = stridx(s:pend, "\n")
+    if l:i < 0 | break | endif
+    let l:line = strpart(s:pend, 0, l:i)
+    let s:pend = strpart(s:pend, l:i + 1)
+    let l:line = substitute(l:line, "\r$", '', '')
+    if l:line ==# '' | continue | endif
+    try
+      let l:ev = json_decode(l:line)
+    catch
+      continue
+    endtry
+    if l:ev['type'] ==# 'message_update'
+      call s:pi_render(s:pi_extract_text(l:ev))
+    elseif l:ev['type'] ==# 'turn_end' || l:ev['type'] ==# 'agent_end'
+      let s:done = v:true
+    endif
+  endwhile
+  if s:done || (s:job != v:null && job_status(s:job) ==# 'dead')
+    call s:pi_finish()
+  endif
+endfunction
+
+function! s:pi_finish() abort
+  if s:timer > 0
+    call timer_stop(s:timer)
+    let s:timer = -1
+  endif
+  if s:outfile !=# '' && filereadable(s:outfile)
+    call delete(s:outfile)
+  endif
+  redrawstatus!
+endfunction
+
+" 复用或新建输出窗口
+function! s:pi_ensure_output(label) abort
+  if s:bnum > 0 && bufexists(s:bnum)
+    let l:wins = win_findbuf(s:bnum)
+    if !empty(l:wins)
+      call win_gotoid(l:wins[0])
+    else
+      execute 'botright sbuffer ' . s:bnum
+    endif
+  else
+    botright new
+    setlocal buftype=nofile bufhidden=wipe noswapfile
+    setlocal filetype=markdown
+    let s:bnum = bufnr('%')
+  endif
+  call deletebufline(s:bnum, 1, '$')
+  call setbufline(s:bnum, 1, ['… pi 正在复盘，等待输出 …'])
+  call setwinvar(win_getid(), '&statusline', ' pi-review[' . a:label . '] ')
+endfunction
+
+function! s:pi_start(lines, focus, gran) abort
+  if s:timer > 0 | call timer_stop(s:timer) | let s:timer = -1 | endif
+  if s:job != v:null
+    try | call job_stop(s:job) | catch | endtry
+  endif
+  let s:acc = ''
+  let s:done = v:false
+  let s:pend = ''
+  let s:processed = 0
+  let s:outfile = tempname()
+  let l:tmpl = get(s:tmpls, a:gran, s:tmpls['chapter'])
+  let l:cmd = s:pi_build_cmd(a:lines, a:focus, l:tmpl)
+  call s:pi_ensure_output(get(s:labels, a:gran, a:gran))
+  " fire-and-forget job：pi 把 json 事件写入 s:outfile，由定时器轮询增量渲染
+  let s:job = job_start(['sh', '-c', l:cmd], {'out_cb': function('s:pi_noop')})
+  let s:timer = timer_start(200, function('s:pi_poll'), {'repeat': -1})
+endfunction
+
+function! s:pi_noop(ch, data) abort
+endfunction
+
+" 公开函数（三粒度）
+" sentence：当前行
+function! PiReviewSentence() abort
+  call s:pi_start([getline('.')], '', 'sentence')
+endfunction
+" paragraph：当前行到下个空行之前
+function! PiReviewParagraph() abort
+  let l:s = line('.')
+  let l:e = l:s
+  while l:e < line('$') && getline(l:e + 1) !~# '^\s*$'
+    let l:e += 1
+  endwhile
+  call s:pi_start(getline(l:s, l:e), '', 'paragraph')
+endfunction
+" chapter：整个 buffer
+function! PiReviewChapter(...) abort
+  let l:focus = a:0 ? a:1 : ''
+  call s:pi_start(getline(1, '$'), l:focus, 'chapter')
+endfunction
+function! PiReviewFocus(...) abort
+  let l:focus = a:0 ? join(a:000, ' ') : ''
+  call s:pi_start(getline(1, '$'), l:focus, 'chapter')
+endfunction
+" 显式选中内容（可选，v 映射默认走 chapter）
+function! PiReviewSelection() range abort
+  call s:pi_start(getline(a:firstline, a:lastline), '', 'chapter')
+endfunction
+
+" 命令与映射
+" v 模式选中默认是 chapter（整篇）
+command! -nargs=? PiReview          call PiReviewChapter(<q-args>)
+command! -nargs=? PiReviewChapter   call PiReviewChapter(<q-args>)
+command! -nargs=0 PiReviewSentence  call PiReviewSentence()
+command! -nargs=0 PiReviewParagraph call PiReviewParagraph()
+command! -nargs=* PiReviewFocus     call PiReviewFocus(<f-args>)
+command! -range   PiReviewSelection <line1>,<line2>call PiReviewSelection()
+nnoremap <silent> <Leader>pr :PiReview<CR>
+vnoremap <silent> <Leader>pr :PiReview<CR>
+nnoremap <silent> <Leader>ps :PiReviewSentence<CR>
+nnoremap <silent> <Leader>pp :PiReviewParagraph<CR>
 endif
+

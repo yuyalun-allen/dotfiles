@@ -22,10 +22,13 @@ export LC_CTYPE=en_US.UTF-8
 
 # VIM binding
 set -o vi
+bind 'set show-mode-in-prompt on'
+bind 'set vi-ins-mode-string "\1\e[1;32m\2[I]\1\e[0m\2 "'
+bind 'set vi-cmd-mode-string "\1\e[1;31m\2[N]\1\e[0m\2 "'
 bind -x '"\C-l": clear'
 
 # NNN Plugin
-export NNN_PLUG='c:-!echo $PWD/$nnn|wl-copy*;f:fzcd;j:autojump;d:diffs;t:nmount;v:imgview'
+export NNN_PLUG='c:-!echo $PWD/$nnn|wl-copy*;f:fzcd;j:autojump;d:diffs;t:nmount;v:imgview;p:preview-tui'
 n ()
 {
   # Block nesting of nnn in subshells
@@ -49,7 +52,7 @@ n ()
 
   # The backslash allows one to alias n to nnn if desired without making an
   # infinitely recursive alias
-  \nnn "$@"
+  \nnn -a "$@"
 
   if [ -f "$NNN_TMPFILE" ]; then
         . "$NNN_TMPFILE"
@@ -96,10 +99,8 @@ alias activate=". ./.venv/bin/activate"
 alias reboot="systemctl reboot"
 alias poweroff="systemctl poweroff"
 
-alias todo="pushd $HOME/Desktop/rule-book && vim TODO.md"
-alias list="pushd $HOME/Desktop/rule-book && vim LIST.md"
-alias show="pushd $HOME/Desktop/rule-book && vim SHOW.md"
-alias memo="pushd $HOME/Desktop/rule-book && vim MEMO.md"
+# ===== 游戏菜单：自包含文件，含菜单命令 =====
+source "$HOME/dotfiles/tools/bash/bash-game-menu.sh"
 
 # Quick bash command lookup via pi
 how() { pi -p "写一个 bash 命令：$*。给出命令和解释，我用的 Arch Linux。"; }
@@ -120,4 +121,4 @@ alias ascii-art='tmux new-window -n ascii-art \; \
   send-keys -t 2 "terminal-rain" Enter \; \
   send-keys -t 3 "asciiquarium" Enter'
 
-neofetch
+source /home/allen/.config/broot/launcher/bash/br

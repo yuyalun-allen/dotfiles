@@ -9,6 +9,12 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
+# 参数：--update/-u —— 对已克隆的仓库执行 git pull、对已装依赖的扩展重跑 npm install
+UPDATE=0
+case "${1:-}" in
+  --update|-u|update) UPDATE=1 ;;
+esac
+
 # link <src> <dest>: 创建/刷新软链，自动建父目录，跳过缺失源，防断链
 link() {
   local src="$1" dest="$2"
@@ -22,16 +28,30 @@ link() {
   echo "  ✓ $dest"
 }
 
-# clone <url> <dir>: 幂等克隆
+# clone <url> <dir>: 幂等克隆；--update 时对已存在仓库执行 git pull
 clone() {
-  git clone --depth=1 "$1" "$2" 2>/dev/null || true
+  local repo="$1" dir="$2" name
+  name="$(basename "$dir")"
+  if [ -d "$dir/.git" ]; then
+    if [ "$UPDATE" = "1" ]; then
+      echo "  ↻ 更新 $name"
+      git -C "$dir" pull --ff-only 2>/dev/null \
+        && git -C "$dir" fetch --depth=1 2>/dev/null \
+        || echo "  ✗ $name 更新失败"
+    else
+      echo "  ✓ $name 已存在"
+    fi
+    return
+  fi
+  git clone --depth=1 "$repo" "$dir" 2>/dev/null \
+    || echo "  ✗ 克隆 $name 失败"
 }
 
 # 1. Shell
 clone https://github.com/basecamp/omarchy.git "$XDG_DATA_HOME/omarchy"
-link "$DOTFILES_DIR/bash_profile" "$HOME/.bash_profile"
-link "$DOTFILES_DIR/bashrc" "$HOME/.bashrc"
-link "$DOTFILES_DIR/profile" "$HOME/.profile"
+link "$DOTFILES_DIR/tools/bash/bash_profile" "$HOME/.bash_profile"
+link "$DOTFILES_DIR/tools/bash/bashrc" "$HOME/.bashrc"
+link "$DOTFILES_DIR/tools/bash/profile" "$HOME/.profile"
 
 # 2. env / tool 配置软链（每行: 仓库相对路径|目标绝对路径）
 while IFS='|' read -r rel dest; do
@@ -49,6 +69,11 @@ tools/vim/vimrc|$XDG_CONFIG_HOME/vim/vimrc
 tools/vim/coc-settings.json|$XDG_CONFIG_HOME/vim/coc-settings.json
 tools/vscode/settings.json|$XDG_CONFIG_HOME/Code/User/settings.json
 tools/vscode/code-flags.conf|$XDG_CONFIG_HOME/code-flags.conf
+# bin 脚本（~/.local/bin 下，经软链指向仓库 bin/）
+bin/summarize_news.sh|$HOME/.local/bin/summarize_news.sh
+bin/summarize_news.py|$HOME/.local/bin/summarize_news.py
+bin/yt_feed.py|$HOME/.local/bin/yt_feed.py
+bin/bili_feed.py|$HOME/.local/bin/bili_feed.py
 EOF
 
 # 3. vim 插件（vendor pack 结构）
@@ -117,10 +142,11 @@ for ext_dir in "$PI_AGENT_CONFIG"/extensions/*/; do
   [ -d "$ext_dir" ] || continue
   [ -f "$ext_dir/package.json" ] || continue
   ext_name="$(basename "$ext_dir")"
-  if [ -d "$ext_dir/node_modules" ]; then
+  if [ -d "$ext_dir/node_modules" ] && [ "$UPDATE" != "1" ]; then
     echo "  ✓ $ext_name: node_modules 已存在，跳过"
   else
-    echo "  Installing npm dependencies for $ext_name..."
+    act="$([ "$UPDATE" = "1" ] && echo '↻ 更新' || echo 'Installing')"
+    echo "  $act npm deps for $ext_name..."
     (cd "$ext_dir" && npm install --silent 2>/dev/null) || true
   fi
 done

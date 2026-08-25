@@ -1,12 +1,13 @@
 {
-  "lastChangelogVersion": "0.82.0",
-  "defaultProvider": "deepseek",
+  "lastChangelogVersion": "0.84.2",
+  "defaultProvider": "bailian",
   "defaultModel": "deepseek-v4-flash",
-  "defaultThinkingLevel": "low",
-  "hideThinkingBlock": true,
+  "defaultThinkingLevel": "medium",
+  "hideThinkingBlock": false,
   "packages": [
     "git:github.com/obra/superpowers",
-    "npm:pi-subagents"
+    "npm:pi-subagents",
+    "npm:pi-antigravity"
   ],
   "theme": "dark"
 }

@@ -19,8 +19,8 @@
             "cacheWrite": 0
           },
           "thinkingLevelMap": {
-            "minimal": "high",
-            "low": "high",
+            "minimal": "low",
+            "low": "low",
             "medium": "high",
             "high": "high",
             "xhigh": "max"
@@ -44,8 +44,8 @@
             "cacheWrite": 0
           },
           "thinkingLevelMap": {
-            "minimal": "high",
-            "low": "high",
+            "minimal": "low",
+            "low": "low",
             "medium": "high",
             "high": "high",
             "xhigh": "max"
@@ -76,8 +76,8 @@
             "cacheWrite": 0
           },
           "thinkingLevelMap": {
-            "minimal": "high",
-            "low": "high",
+            "minimal": "low",
+            "low": "low",
             "medium": "high",
             "high": "high",
             "xhigh": "max"
@@ -102,8 +102,199 @@
             "cacheWrite": 0
           },
           "thinkingLevelMap": {
-            "minimal": "high",
-            "low": "high",
+            "minimal": "low",
+            "low": "low",
+            "medium": "high",
+            "high": "high",
+            "xhigh": "max"
+          },
+          "compat": {
+            "requiresReasoningContentOnAssistantMessages": true,
+            "thinkingFormat": "deepseek",
+            "supportsDeveloperRole": false
+          }
+        },
+        {
+          "id": "qwen3.7-flash",
+          "name": "Qwen 3.7 Flash",
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "input": ["text", "image"],
+          "reasoning": false,
+          "cost": {
+            "input": 0.2,
+            "output": 0.8,
+            "cacheRead": 0.04,
+            "cacheWrite": 0
+          }
+        }
+      ]
+    },
+    "njuse": {
+      "baseUrl": "https://njusehub.info/v1",
+      "api": "openai-completions",
+      "apiKey": "!secret-tool lookup service njusehub",
+      "models": [
+        {
+          "id": "deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "input": ["text"],
+          "reasoning": true,
+          "cost": {
+            "input": 1.74,
+            "output": 3.48,
+            "cacheRead": 0.145,
+            "cacheWrite": 0
+          },
+          "thinkingLevelMap": {
+            "minimal": "low",
+            "low": "low",
+            "medium": "high",
+            "high": "high",
+            "xhigh": "max"
+          },
+          "compat": {
+            "requiresReasoningContentOnAssistantMessages": true,
+            "thinkingFormat": "deepseek",
+            "supportsDeveloperRole": false
+          }
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash",
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "input": ["text"],
+          "reasoning": true,
+          "cost": {
+            "input": 0.14,
+            "output": 0.28,
+            "cacheRead": 0.028,
+            "cacheWrite": 0
+          },
+          "thinkingLevelMap": {
+            "minimal": "low",
+            "low": "low",
+            "medium": "high",
+            "high": "high",
+            "xhigh": "max"
+          },
+          "compat": {
+            "requiresReasoningContentOnAssistantMessages": true,
+            "thinkingFormat": "deepseek",
+            "supportsDeveloperRole": false
+          }
+        }
+      ]
+    },
+    "volces": {
+      "baseUrl": "https://ark.cn-beijing.volces.com/api/coding/v3",
+      "api": "openai-completions",
+      "apiKey": "!secret-tool lookup service volces",
+      "models": [
+        {
+          "id": "deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "input": ["text"],
+          "reasoning": true,
+          "cost": {
+            "input": 1.74,
+            "output": 3.48,
+            "cacheRead": 0.145,
+            "cacheWrite": 0
+          },
+          "thinkingLevelMap": {
+            "minimal": "low",
+            "low": "low",
+            "medium": "high",
+            "high": "high",
+            "xhigh": "max"
+          },
+          "compat": {
+            "requiresReasoningContentOnAssistantMessages": true,
+            "thinkingFormat": "deepseek",
+            "supportsDeveloperRole": false
+          }
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash",
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "input": ["text"],
+          "reasoning": true,
+          "cost": {
+            "input": 0.14,
+            "output": 0.28,
+            "cacheRead": 0.028,
+            "cacheWrite": 0
+          },
+          "thinkingLevelMap": {
+            "minimal": "low",
+            "low": "low",
+            "medium": "high",
+            "high": "high",
+            "xhigh": "max"
+          },
+          "compat": {
+            "requiresReasoningContentOnAssistantMessages": true,
+            "thinkingFormat": "deepseek",
+            "supportsDeveloperRole": false
+          }
+        }
+      ]
+    },
+    "volces-plan": {
+      "baseUrl": "https://ark.cn-beijing.volces.com/api/plan/v3",
+      "api": "openai-completions",
+      "apiKey": "!secret-tool lookup service volces-plan",
+      "models": [
+        {
+          "id": "deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "input": ["text"],
+          "reasoning": true,
+          "cost": {
+            "input": 1.74,
+            "output": 3.48,
+            "cacheRead": 0.145,
+            "cacheWrite": 0
+          },
+          "thinkingLevelMap": {
+            "minimal": "low",
+            "low": "low",
+            "medium": "high",
+            "high": "high",
+            "xhigh": "max"
+          },
+          "compat": {
+            "requiresReasoningContentOnAssistantMessages": true,
+            "thinkingFormat": "deepseek",
+            "supportsDeveloperRole": false
+          }
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash",
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "input": ["text"],
+          "reasoning": true,
+          "cost": {
+            "input": 0.14,
+            "output": 0.28,
+            "cacheRead": 0.028,
+            "cacheWrite": 0
+          },
+          "thinkingLevelMap": {
+            "minimal": "low",
+            "low": "low",
             "medium": "high",
             "high": "high",
             "xhigh": "max"

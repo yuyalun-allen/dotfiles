@@ -8,6 +8,7 @@ Never use `sudo` commands and never install packages on your own, just let me kn
 You should write and execute code as realistically as possible, rather than just outputting text.
 I am also very familiar with command-line operations, so you will need to explain to me how you use command-line tools.
 The `$PI_CODING_AGENT_DIR` has been set to `~/.config/pi/agent` rather than the default one.
+Most applications are set to follow XDG base directory specification.
 
 
 If you don't know the location of some documents (office documents/images, etc.), you can ask me directly.
