@@ -264,7 +264,10 @@ nmap <M-k> mz:m-2<cr>`z
 vmap <M-k> :m'<-2<cr>`>my`<mzgv`yo`z
 vmap <M-j> :m'>+<cr>`<my`>mzgv`yo`z
 nnoremap <C-w>x <C-w>c
-nnoremap gf :e <cfile><CR>
+" 仅对非 tex 文件映射 gf 为 :e <cfile>
+" (tex 文件依赖 vimtex 的 includeexpr / path / suffixesadd 原生 gf 跳转)
+autocmd FileType * if &filetype !=# 'tex' | nnoremap <buffer> gf :e <cfile><CR> | endif
+
 
 " Customizing
 set pastetoggle=<F10>
@@ -430,146 +433,97 @@ endfunction
 
 vnoremap <leader>c :<C-u>call system('wl-copy', GetVisualSelection())<CR>
 
+" => Visual 模式下按 <Leader>s 按中英文句号分行（语义分句）
+function! s:split_sentences_visual() abort
+  let l:saved_reg = @@
+  let l:saved_type = getregtype('@')
+
+  " 获取选区内容
+  let l:text = GetVisualSelection()
+  if empty(l:text) | return | endif
+
+  " 1. 中文句号：替换为句号 + 换行
+  let l:text = substitute(l:text, '。\s*', "。\n", 'g')
+  " 2. 英文句号：仅在句号后有空白字符时替换为句号 + 换行（避免误伤 3.14 等数字）
+  let l:text = substitute(l:text, '\.\s\+', ".\n", 'g')
+  " 3. 清理末尾可能多出的空换行
+  let l:text = substitute(l:text, '\n\+$', '', '')
+
+  " 替换选区内容并保持寄存器干净
+  call setreg('"', l:text, 'c')
+  normal! gvp
+
+  let @@ = l:saved_reg
+  call setreg('@', l:saved_reg, l:saved_type)
+endfunction
+
+vnoremap <silent> <Leader>s :<C-u>call <SID>split_sentences_visual()<CR>
+
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => pi-review：在 vim 中调用 pi（--mode json 流式）复盘当前内容
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => llm-review：在 vim 中调用 llm 复盘当前内容
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " 用法:
-"   :PiReview              复盘整个 buffer（chapter，流式输出到下方窗口）
-"   :PiReviewSentence      复盘当前行（微距）
-"   :PiReviewParagraph     复盘当前段（到下个空行，中距）
-"   :PiReviewChapter       复盘整个 buffer（宏观）
-"   :PiReviewFocus <词>    复盘整个 buffer 并重点关注某方面
-"   :'<,'>PiReviewSelection 复盘显式选中的内容
-" 依赖: pi 在 PATH 中；三个粒度分别用不同的 prompt template（可改 g:pi_review_*_template）
-" 行为: 内容写临时文件 -> 管道给 `pi -nt -ns -ne --mode json`
-"       -> 后台 job 写 jsonl 到文件，定时器轮询增量渲染（流式）
+"   :LlmReview              复盘整个 buffer（chapter，流式输出到下方窗口）
+"   :LlmReviewSentence      复盘当前行（微距）
+"   :LlmReviewParagraph     复盘当前段（到下个空行，中距）
+"   :LlmReviewChapter       复盘整个 buffer（宏观）
+"   :LlmReviewFocus <词>    复盘整个 buffer 并重点关注某方面
+"   :'<,'>LlmReviewSelection 复盘显式选中的内容
+" 依赖: llm 在 PATH 中；三个粒度分别用不同的 prompt template
+" 行为: 内容写临时文件 -> 管道给 `llm prompt --sf <tmpl> -m <model> -s <directive>`
+"       -> 后台 job 实时接收行输出并直接渲染到 buffer
 "
-if !exists('g:loaded_pi_review')
-let g:loaded_pi_review = 1
 
-let s:pi = get(g:, 'pi_executable', 'pi')
-let s:provider = get(g:, 'pi_review_provider', 'bailian')
-let s:model = get(g:, 'pi_review_model', 'qwen3.7-flash')
+let s:llm = get(g:, 'llm_executable', 'llm')
+let s:model = get(g:, 'llm_review_model', 'gemini-3.5-flash-lite')
+" let s:model = get(g:, 'llm_review_model', 'llama-local')
 " 三个粒度的提示词模板：sentence(当前行) / paragraph(到下个空行) / chapter(整个buffer)
 let s:tmpls = {
-      \ 'sentence': get(g:, 'pi_review_sentence_template',
+      \ 'sentence': get(g:, 'llm_review_sentence_template',
       \   expand('~') . '/.config/pi/agent/prompts/review-sentence.md'),
-      \ 'paragraph': get(g:, 'pi_review_paragraph_template',
+      \ 'paragraph': get(g:, 'llm_review_paragraph_template',
       \   expand('~') . '/.config/pi/agent/prompts/review-paragraph.md'),
-      \ 'chapter': get(g:, 'pi_review_chapter_template',
+      \ 'chapter': get(g:, 'llm_review_chapter_template',
       \   expand('~') . '/.config/pi/agent/prompts/review.md'),
       \ }
 let s:labels = {'sentence': '句', 'paragraph': '段', 'chapter': '篇'}
-let s:directive = get(g:, 'pi_review_directive',
-      \ '立即直接对上面的内容执行复盘任务并输出，不要提问、不要反问、不要寒暄。')
+let s:directive = get(g:, 'llm_review_directive',
+      \ '立即直接对输入的内容执行复盘任务并输出，不要提问、不要反问、不要寒暄。')
 
 " 运行时状态
-let s:acc = ''        " 当前已渲染的助手文本
 let s:bnum = -1       " 输出 buffer 号
-let s:done = v:false
-let s:outfile = ''    " pi json 输出文件（由定时器轮询）
-let s:pend = ''       " 未拆完的 jsonl 缓冲
-let s:processed = 0   " 已消费的字节数
-let s:timer = -1      " 轮询定时器 id
 let s:job = v:null
+let s:first_line = v:true
 
-" 命令构建：内容 -> 临时文件 -> 管道给 pi，json 事件写 s:outfile；结束后清理临时文件
-function! s:pi_build_cmd(lines, focus, tmpl) abort
+" 命令构建：内容 -> 临时文件 -> 管道给 llm；结束后清理临时文件
+function! s:llm_build_cmd(lines, focus, tmpl) abort
   let l:tmp = tempname()
   call writefile(a:lines, l:tmp)
   let l:msg = s:directive
   if a:focus !=# ''
     let l:msg = '【关注点】' . a:focus . '。' . l:msg
   endif
-  let l:cmd = printf('cat %s | %s -nt -ns -ne --provider %s --model %s --mode json --append-system-prompt %s -p %s > %s; rm -f %s',
-        \ shellescape(l:tmp), shellescape(s:pi), shellescape(s:provider), shellescape(s:model),
-        \ shellescape(a:tmpl), shellescape(l:msg), shellescape(s:outfile), shellescape(l:tmp))
+  let l:cmd = printf('cat %s | %s prompt --sf %s -m %s -s %s; rm -f %s',
+        \ shellescape(l:tmp), shellescape(s:llm), shellescape(a:tmpl),
+        \ shellescape(s:model), shellescape(l:msg), shellescape(l:tmp))
   return l:cmd
 endfunction
 
-" 从 message_update 事件取当前助手可见文本（只取 text 块，忽略 thinking）
-" 注意：用 get() 函数嵌套，不要用 {}.get() 链式方法（vim 会报 E716）
-function! s:pi_extract_text(ev) abort
-  let l:ae = get(a:ev, 'assistantMessageEvent', {})
-  let l:content = get(get(l:ae, 'partial', {}), 'content', [])
-  if empty(l:content)
-    let l:content = get(get(a:ev, 'message', {}), 'content', [])
-  endif
-  let l:out = []
-  for l:b in l:content
-    if get(l:b, 'type', '') ==# 'text'
-      call add(l:out, get(l:b, 'text', ''))
-    endif
-  endfor
-  return join(l:out, '')
-endfunction
-
-" 把最新文本写入输出 buffer（内容变化才写，减少闪烁）
-function! s:pi_render(text) abort
+" 实时按行追加到输出 buffer
+function! s:llm_out_cb(ch, msg) abort
   if s:bnum <= 0 || !bufexists(s:bnum) | return | endif
-  if a:text ==# s:acc | return | endif
-  let s:acc = a:text
-  let l:lines = split(a:text, "\n", 1)
-  if empty(l:lines) | let l:lines = [''] | endif
-  call deletebufline(s:bnum, 1, '$')
-  call setbufline(s:bnum, 1, l:lines)
-endfunction
-
-" 轮询输出文件：增量读新字节，拆行解析 JSON 事件并渲染
-function! s:pi_poll(id) abort
-  if s:outfile ==# '' || !filereadable(s:outfile)
-    " 进程结束且无文件时直接收尾
-    if s:job != v:null && job_status(s:job) ==# 'dead'
-      call s:pi_finish()
-    endif
-    return
+  if s:first_line
+    let s:first_line = v:false
+    call deletebufline(s:bnum, 1, '$')
+    call setbufline(s:bnum, 1, a:msg)
+  else
+    call appendbufline(s:bnum, '$', a:msg)
   endif
-  let l:new = system('tail -c +' . (s:processed + 1) . ' ' . shellescape(s:outfile))
-  let s:processed = getfsize(s:outfile)
-  if l:new ==# ''
-    if s:job != v:null && job_status(s:job) ==# 'dead'
-      call s:pi_finish()
-    endif
-    return
-  endif
-  let s:pend .= l:new
-  while 1
-    let l:i = stridx(s:pend, "\n")
-    if l:i < 0 | break | endif
-    let l:line = strpart(s:pend, 0, l:i)
-    let s:pend = strpart(s:pend, l:i + 1)
-    let l:line = substitute(l:line, "\r$", '', '')
-    if l:line ==# '' | continue | endif
-    try
-      let l:ev = json_decode(l:line)
-    catch
-      continue
-    endtry
-    if l:ev['type'] ==# 'message_update'
-      call s:pi_render(s:pi_extract_text(l:ev))
-    elseif l:ev['type'] ==# 'turn_end' || l:ev['type'] ==# 'agent_end'
-      let s:done = v:true
-    endif
-  endwhile
-  if s:done || (s:job != v:null && job_status(s:job) ==# 'dead')
-    call s:pi_finish()
-  endif
-endfunction
-
-function! s:pi_finish() abort
-  if s:timer > 0
-    call timer_stop(s:timer)
-    let s:timer = -1
-  endif
-  if s:outfile !=# '' && filereadable(s:outfile)
-    call delete(s:outfile)
-  endif
-  redrawstatus!
 endfunction
 
 " 复用或新建输出窗口
-function! s:pi_ensure_output(label) abort
+function! s:llm_ensure_output(label) abort
   if s:bnum > 0 && bufexists(s:bnum)
     let l:wins = win_findbuf(s:bnum)
     if !empty(l:wins)
@@ -584,70 +538,287 @@ function! s:pi_ensure_output(label) abort
     let s:bnum = bufnr('%')
   endif
   call deletebufline(s:bnum, 1, '$')
-  call setbufline(s:bnum, 1, ['… pi 正在复盘，等待输出 …'])
-  call setwinvar(win_getid(), '&statusline', ' pi-review[' . a:label . '] ')
+  call setbufline(s:bnum, 1, ['… llm 正在复盘，等待输出 …'])
+  call setwinvar(win_getid(), '&statusline', ' llm-review[' . a:label . '] ')
 endfunction
 
-function! s:pi_start(lines, focus, gran) abort
-  if s:timer > 0 | call timer_stop(s:timer) | let s:timer = -1 | endif
+function! s:llm_start(lines, focus, gran) abort
   if s:job != v:null
     try | call job_stop(s:job) | catch | endtry
   endif
-  let s:acc = ''
-  let s:done = v:false
-  let s:pend = ''
-  let s:processed = 0
-  let s:outfile = tempname()
+  let s:first_line = v:true
   let l:tmpl = get(s:tmpls, a:gran, s:tmpls['chapter'])
-  let l:cmd = s:pi_build_cmd(a:lines, a:focus, l:tmpl)
-  call s:pi_ensure_output(get(s:labels, a:gran, a:gran))
-  " fire-and-forget job：pi 把 json 事件写入 s:outfile，由定时器轮询增量渲染
-  let s:job = job_start(['sh', '-c', l:cmd], {'out_cb': function('s:pi_noop')})
-  let s:timer = timer_start(200, function('s:pi_poll'), {'repeat': -1})
+  let l:cmd = s:llm_build_cmd(a:lines, a:focus, l:tmpl)
+  call s:llm_ensure_output(get(s:labels, a:gran, a:gran))
+  let s:job = job_start(['sh', '-c', l:cmd], {'out_cb': function('s:llm_out_cb')})
 endfunction
 
-function! s:pi_noop(ch, data) abort
-endfunction
-
-" 公开函数（三粒度）
+" 公开函数（三粒度，均支持传入关注点 focus）
 " sentence：当前行
-function! PiReviewSentence() abort
-  call s:pi_start([getline('.')], '', 'sentence')
+function! LlmReviewSentence(...) abort
+  let l:focus = a:0 ? a:1 : ''
+  call s:llm_start([getline('.')], l:focus, 'sentence')
 endfunction
 " paragraph：当前行到下个空行之前
-function! PiReviewParagraph() abort
+function! LlmReviewParagraph(...) abort
+  let l:focus = a:0 ? a:1 : ''
   let l:s = line('.')
   let l:e = l:s
   while l:e < line('$') && getline(l:e + 1) !~# '^\s*$'
     let l:e += 1
   endwhile
-  call s:pi_start(getline(l:s, l:e), '', 'paragraph')
+  call s:llm_start(getline(l:s, l:e), l:focus, 'paragraph')
 endfunction
 " chapter：整个 buffer
-function! PiReviewChapter(...) abort
+function! LlmReviewChapter(...) abort
   let l:focus = a:0 ? a:1 : ''
-  call s:pi_start(getline(1, '$'), l:focus, 'chapter')
+  call s:llm_start(getline(1, '$'), l:focus, 'chapter')
 endfunction
-function! PiReviewFocus(...) abort
+function! LlmReviewFocus(...) abort
   let l:focus = a:0 ? join(a:000, ' ') : ''
-  call s:pi_start(getline(1, '$'), l:focus, 'chapter')
+  call s:llm_start(getline(1, '$'), l:focus, 'chapter')
 endfunction
-" 显式选中内容（可选，v 映射默认走 chapter）
-function! PiReviewSelection() range abort
-  call s:pi_start(getline(a:firstline, a:lastline), '', 'chapter')
+" 显式选中内容：单行用 sentence(微距)，多行用 paragraph(中距)
+function! LlmReviewSelection(...) range abort
+  let l:focus = a:0 ? a:1 : ''
+  if a:firstline == a:lastline
+    call s:llm_start(getline(a:firstline, a:lastline), l:focus, 'sentence')
+  else
+    call s:llm_start(getline(a:firstline, a:lastline), l:focus, 'paragraph')
+  endif
+endfunction
+
+function! s:interactive_review_visual() abort
+  let [l:line_start, l:line_end] = [getpos("'<")[1], getpos("'>")[1]]
+  let l:focus = input('关注点/Review Focus (回车跳过): ')
+  if l:line_start == l:line_end
+    call s:llm_start([getline(l:line_start)], l:focus, 'sentence')
+  else
+    call s:llm_start(getline(l:line_start, l:line_end), l:focus, 'paragraph')
+  endif
+endfunction
+
+function! s:interactive_review_normal() abort
+  let l:focus = input('关注点/Review Focus (回车跳过): ')
+  call LlmReviewChapter(l:focus)
 endfunction
 
 " 命令与映射
-" v 模式选中默认是 chapter（整篇）
-command! -nargs=? PiReview          call PiReviewChapter(<q-args>)
-command! -nargs=? PiReviewChapter   call PiReviewChapter(<q-args>)
-command! -nargs=0 PiReviewSentence  call PiReviewSentence()
-command! -nargs=0 PiReviewParagraph call PiReviewParagraph()
-command! -nargs=* PiReviewFocus     call PiReviewFocus(<f-args>)
-command! -range   PiReviewSelection <line1>,<line2>call PiReviewSelection()
-nnoremap <silent> <Leader>pr :PiReview<CR>
-vnoremap <silent> <Leader>pr :PiReview<CR>
-nnoremap <silent> <Leader>ps :PiReviewSentence<CR>
-nnoremap <silent> <Leader>pp :PiReviewParagraph<CR>
-endif
+command! -nargs=?        LlmReview          call LlmReviewChapter(<q-args>)
+command! -nargs=?        LlmReviewChapter   call LlmReviewChapter(<q-args>)
+command! -nargs=?        LlmReviewSentence  call LlmReviewSentence(<q-args>)
+command! -nargs=?        LlmReviewParagraph call LlmReviewParagraph(<q-args>)
+command! -nargs=*        LlmReviewFocus     call LlmReviewFocus(<f-args>)
+command! -range -nargs=? LlmReviewSelection <line1>,<line2>call LlmReviewSelection(<q-args>)
 
+" 快捷键：
+" Normal 模式：<Leader>lr 提示输入关注点（回车默认），复盘整个 buffer (chapter)
+nnoremap <silent> <Leader>lr :call <SID>interactive_review_normal()<CR>
+" Visual 模式：<Leader>lr 提示输入关注点（回车默认），根据选区行数触发微距或中距复盘
+vnoremap <silent> <Leader>lr :<C-u>call <SID>interactive_review_visual()<CR>
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => llm-suggest：根据选中文段和给定要求给出修改思路、词汇备选和最优文段
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" 用法:
+"   :'<,'>LlmSuggest [要求]      根据选中的文段和要求给出修改建议
+"   :LlmSuggest [要求]           针对当前行（或选区）给出修改建议
+"   :LlmSuggestSentence [要求]   针对当前行给出修改建议
+"   :LlmSuggestParagraph [要求]  针对当前段落给出修改建议
+" 快捷键:
+"   <Leader>lg (Visual) 选中文字后按，提示输入要求并流式输出建议
+"   <Leader>lg (Normal) 当前行触发，提示输入要求并流式输出建议
+"   <Leader>lG (Normal) 当前段触发，提示输入要求并流式输出建议
+"   <Leader>li / <Leader>lI 别名同上
+"
+
+let s:suggest_model = get(g:, 'llm_suggest_model', s:model)
+let s:suggest_tmpl = get(g:, 'llm_suggest_template',
+      \ expand('~') . '/.config/pi/agent/prompts/suggest.md')
+let s:suggest_directive = get(g:, 'llm_suggest_directive',
+      \ '立即直接对输入的内容执行修改与优化任务并输出，不要提问、不要反问、不要寒暄。')
+
+let s:suggest_bnum = -1
+let s:suggest_job = v:null
+let s:suggest_first_line = v:true
+
+function! s:llm_suggest_build_cmd(lines, requirement) abort
+  let l:tmp = tempname()
+  call writefile(a:lines, l:tmp)
+  let l:msg = s:suggest_directive
+  if a:requirement !=# ''
+    let l:msg = '【要求】' . a:requirement . '。' . l:msg
+  endif
+  let l:cmd = printf('cat %s | %s prompt --sf %s -m %s -s %s; rm -f %s',
+        \ shellescape(l:tmp), shellescape(s:llm), shellescape(s:suggest_tmpl),
+        \ shellescape(s:suggest_model), shellescape(l:msg), shellescape(l:tmp))
+  return l:cmd
+endfunction
+
+function! s:llm_suggest_out_cb(ch, msg) abort
+  if s:suggest_bnum <= 0 || !bufexists(s:suggest_bnum) | return | endif
+  if s:suggest_first_line
+    let s:suggest_first_line = v:false
+    call deletebufline(s:suggest_bnum, 1, '$')
+    call setbufline(s:suggest_bnum, 1, a:msg)
+  else
+    call appendbufline(s:suggest_bnum, '$', a:msg)
+  endif
+endfunction
+
+function! s:llm_suggest_ensure_output(label) abort
+  if s:suggest_bnum > 0 && bufexists(s:suggest_bnum)
+    let l:wins = win_findbuf(s:suggest_bnum)
+    if !empty(l:wins)
+      call win_gotoid(l:wins[0])
+    else
+      execute 'botright sbuffer ' . s:suggest_bnum
+    endif
+  else
+    botright new
+    setlocal buftype=nofile bufhidden=wipe noswapfile
+    setlocal filetype=markdown
+    let s:suggest_bnum = bufnr('%')
+    nnoremap <buffer> <silent> a :call <SID>interactive_suggest_ask()<CR>
+    nnoremap <buffer> <silent> <Leader>a :call <SID>interactive_suggest_ask()<CR>
+  endif
+  call deletebufline(s:suggest_bnum, 1, '$')
+  call setbufline(s:suggest_bnum, 1, ['… llm 正在分析并生成修改建议，等待输出 …'])
+  call setwinvar(win_getid(), '&statusline', ' llm-suggest[' . a:label . '] (按 a 或 ,a 追问) ')
+endfunction
+
+function! s:llm_suggest_start(lines, requirement, label) abort
+  if s:suggest_job != v:null
+    try | call job_stop(s:suggest_job) | catch | endtry
+  endif
+  let s:suggest_first_line = v:true
+  let l:cmd = s:llm_suggest_build_cmd(a:lines, a:requirement)
+  call s:llm_suggest_ensure_output(a:label)
+  let s:suggest_job = job_start(['sh', '-c', l:cmd], {
+        \ 'out_cb': function('s:llm_suggest_out_cb'),
+        \ 'close_cb': function('s:on_suggest_job_close'),
+        \ })
+endfunction
+
+function! s:on_suggest_job_close(ch) abort
+  let s:suggest_job = v:null
+endfunction
+
+function! s:on_ask_job_close(ch) abort
+  let s:suggest_job = v:null
+endfunction
+
+let s:ask_first_line = v:true
+
+function! s:on_ask_stream(ch, msg) abort
+  if s:suggest_bnum <= 0 || !bufexists(s:suggest_bnum) | return | endif
+  if s:ask_first_line
+    let s:ask_first_line = v:false
+    call setbufline(s:suggest_bnum, '$', a:msg)
+  else
+    call appendbufline(s:suggest_bnum, '$', a:msg)
+  endif
+  let l:wins = win_findbuf(s:suggest_bnum)
+  if !empty(l:wins)
+    call win_execute(l:wins[0], 'normal! G')
+  endif
+endfunction
+
+function! LlmSuggestAsk(...) abort
+  let l:question = a:0 ? join(a:000, ' ') : ''
+  if empty(l:question)
+    let l:question = input('追问 (Follow up): ')
+  endif
+  if empty(l:question) | return | endif
+
+  if s:suggest_job != v:null
+    try | call job_stop(s:suggest_job) | catch | endtry
+  endif
+
+  if s:suggest_bnum <= 0 || !bufexists(s:suggest_bnum)
+    echo '未找到活跃的 suggestion 窗口'
+    return
+  endif
+
+  let l:wins = win_findbuf(s:suggest_bnum)
+  if empty(l:wins)
+    execute 'botright sbuffer ' . s:suggest_bnum
+  endif
+
+  call appendbufline(s:suggest_bnum, '$', ['', '---', '### 追问: ' . l:question, '', '… 正在思考并回答 …'])
+  let l:wins = win_findbuf(s:suggest_bnum)
+  if !empty(l:wins)
+    call win_execute(l:wins[0], 'normal! G')
+  endif
+
+  let s:ask_first_line = v:true
+  let l:tmp = tempname()
+  call writefile([l:question], l:tmp)
+  let l:cmd = printf('cat %s | %s prompt -c; rm -f %s', shellescape(l:tmp), shellescape(s:llm), shellescape(l:tmp))
+  let s:suggest_job = job_start(['sh', '-c', l:cmd], {
+        \ 'out_cb': function('s:on_ask_stream'),
+        \ 'err_cb': function('s:on_ask_stream'),
+        \ 'close_cb': function('s:on_ask_job_close'),
+        \ })
+endfunction
+
+function! s:interactive_suggest_ask() abort
+  let l:q = input('追问 (Follow up): ')
+  if empty(l:q) | return | endif
+  call LlmSuggestAsk(l:q)
+endfunction
+
+function! LlmSuggestSentence(...) abort
+  let l:req = a:0 ? a:1 : ''
+  call s:llm_suggest_start([getline('.')], l:req, '句')
+endfunction
+
+function! LlmSuggestParagraph(...) abort
+  let l:req = a:0 ? a:1 : ''
+  let l:s = line('.')
+  let l:e = l:s
+  while l:e < line('$') && getline(l:e + 1) !~# '^\s*$'
+    let l:e += 1
+  endwhile
+  call s:llm_suggest_start(getline(l:s, l:e), l:req, '段')
+endfunction
+
+function! LlmSuggestRange(line1, line2, ...) abort
+  let l:req = a:0 ? a:1 : ''
+  call s:llm_suggest_start(getline(a:line1, a:line2), l:req, '选区')
+endfunction
+
+function! s:interactive_suggest_visual() abort
+  let l:sel = GetVisualSelection()
+  let l:lines = split(l:sel, "\n")
+  if empty(l:lines)
+    let l:lines = [getline('.')]
+  endif
+  let l:req = input('修改要求 (回车跳过): ')
+  call s:llm_suggest_start(l:lines, l:req, '选区')
+endfunction
+
+function! s:interactive_suggest_normal() abort
+  let l:req = input('修改要求 (回车跳过): ')
+  call s:llm_suggest_start([getline('.')], l:req, '句')
+endfunction
+
+function! s:interactive_suggest_paragraph() abort
+  let l:req = input('修改要求 (回车跳过): ')
+  call LlmSuggestParagraph(l:req)
+endfunction
+
+" 命令与映射
+command! -range -nargs=? LlmSuggest          if <line1> == <line2> && <q-args> ==# '' | call <SID>interactive_suggest_normal() | else | call LlmSuggestRange(<line1>, <line2>, <q-args>) | endif
+command! -range -nargs=? LlmSuggestSelection <line1>,<line2>call LlmSuggestRange(<line1>, <line2>, <q-args>)
+command! -nargs=?        LlmSuggestSentence  call LlmSuggestSentence(<q-args>)
+command! -nargs=?        LlmSuggestParagraph call LlmSuggestParagraph(<q-args>)
+command! -nargs=*        LlmSuggestAsk       call LlmSuggestAsk(<f-args>)
+
+" 快捷键：
+" Visual 模式：选中文字后按 <Leader>lg，提示输入修改要求（可直接回车），分屏流式输出
+vnoremap <silent> <Leader>ls :<C-u>call <SID>interactive_suggest_visual()<CR>
+
+" Normal 模式：按 <Leader>lg 对当前行触发修改建议
+nnoremap <silent> <Leader>ls :call <SID>interactive_suggest_normal()<CR>

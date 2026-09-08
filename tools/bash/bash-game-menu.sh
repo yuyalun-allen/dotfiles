@@ -61,7 +61,7 @@ diaryview() {
   vim "$dir/$sel.md"
 }
 
-# 新闻：生成/查看当天新闻摘要（rule-book/news/YYYY-MM-DD.md，缺失则先生成）
+# 新闻：生成/查看/朗读当天新闻摘要（rule-book/news/YYYY-MM-DD.md，缺失则先生成）
 news() {
   local dir="$HOME/Desktop/rule-book/news"
   local -a entries=()
@@ -72,10 +72,11 @@ news() {
     if [ -f "$dir/$d.md" ]; then mark="✓"; else mark="·"; fi
     entries+=("$mark $d")
   done
-  local sel
-  sel=$(printf '%s\n' "${entries[@]}" \
-    | fzf --prompt="选择日期（回车确认，ESC 取消）: " \
-          --header="最近 7 天新闻（✓=已有 ·=缺失将生成，右侧实时预览）" \
+  local out key sel
+  out=$(printf '%s\n' "${entries[@]}" \
+    | fzf --expect=ctrl-p \
+          --prompt="选择日期（Enter 打开，Ctrl-P 朗读，ESC 取消）: " \
+          --header="最近 7 天新闻（✓=已有 ·=缺失将生成，Ctrl-P 语音朗读）" \
           --preview '
             d={2}
             f="$HOME/Desktop/rule-book/news/$d.md"
@@ -89,14 +90,24 @@ news() {
               echo "【$d】暂无摘要，选择后自动生成"
             fi
           ' 2>/dev/null)
+  [ -z "$out" ] && { echo "已取消"; return; }
+
+  key=$(head -1 <<< "$out")
+  sel=$(tail -n +2 <<< "$out")
   [ -z "$sel" ] && { echo "已取消"; return; }
+
   local d="${sel##* }"
   local f="$dir/$d.md"
   if [ ! -f "$f" ]; then
     echo "【$d】无缓存，正在生成摘要..."
     summarize_news.sh "$d" || { echo "生成失败"; return 1; }
   fi
-  vim "$f"
+
+  if [ "$key" = "ctrl-p" ]; then
+    news_tts.py "$f"
+  else
+    vim "$f"
+  fi
 }
 
 # 带旋转动效的单键读取；成功返回 0 并置 REPLY；^D/EOF 返回 1

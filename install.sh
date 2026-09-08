@@ -71,6 +71,7 @@ tools/vscode/settings.json|$XDG_CONFIG_HOME/Code/User/settings.json
 tools/vscode/code-flags.conf|$XDG_CONFIG_HOME/code-flags.conf
 bin/summarize_news.sh|$HOME/.local/bin/summarize_news.sh
 bin/summarize_news.py|$HOME/.local/bin/summarize_news.py
+bin/news_tts.py|$HOME/.local/bin/news_tts.py
 bin/yt_feed.py|$HOME/.local/bin/yt_feed.py
 bin/bili_feed.py|$HOME/.local/bin/bili_feed.py
 EOF
@@ -83,7 +84,6 @@ mkdir -p "$VIM_PLUGIN_START_HOME"
 
 for repo in \
   https://github.com/NLKNguyen/papercolor-theme.git \
-  https://github.com/dense-analysis/ale.git \
   https://github.com/airblade/vim-gitgutter.git \
   https://github.com/img-paste-devs/img-paste.vim.git \
   https://github.com/lervag/vimtex.git \
@@ -92,8 +92,7 @@ for repo in \
   clone "$repo" "$VIM_PLUGIN_START_HOME/$(basename "$repo" .git)"
 done
 
-# 清理已废弃的 vim-lsp 生态插件目录（旧安装残留；ale 保留）
-for stale in vim-lsp vim-lsp-ale asyncomplete.vim asyncomplete-lsp.vim; do
+for stale in vim-lsp vim-lsp-ale asyncomplete.vim asyncomplete-lsp.vim ale; do
   if [ -d "$VIM_PLUGIN_START_HOME/$stale" ]; then
     rm -rf "$VIM_PLUGIN_START_HOME/$stale"
     echo "  ✓ 移除废弃插件: $stale"
@@ -133,6 +132,7 @@ mkdir -p "$PI_AGENT_CONFIG"
 link "$DOTFILES_DIR/tools/pi/agent/settings.json" "$PI_AGENT_CONFIG/settings.json"
 link "$DOTFILES_DIR/tools/pi/agent/APPEND_SYSTEM.md" "$PI_AGENT_CONFIG/APPEND_SYSTEM.md"
 link "$DOTFILES_DIR/tools/pi/agent/models.json" "$PI_AGENT_CONFIG/models.json"
+link "$DOTFILES_DIR/tools/pi/agent/prompts" "$PI_AGENT_CONFIG/prompts"
 link "$DOTFILES_DIR/tools/pi/agent/skills" "$PI_AGENT_CONFIG/skills"
 link "$DOTFILES_DIR/tools/pi/agent/extensions" "$PI_AGENT_CONFIG/extensions"
 

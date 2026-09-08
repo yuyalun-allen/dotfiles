@@ -5,7 +5,21 @@
 #
 set -euo pipefail
 
-# ---------- 1) 触发 Liferea 刷新所有源，并等待刷新完成 ----------
+# ---------- 1) 确保 Liferea 运行并触发刷新所有订阅源 ----------
+if ! pgrep -x liferea >/dev/null 2>&1; then
+  echo "Liferea 未运行，正在后台启动..." >&2
+  liferea --mainwindow-state=hidden >/dev/null 2>&1 &
+  # 等待 D-Bus 接口就绪（最多 10 秒）
+  for _ in {1..20}; do
+    if gdbus call --session --dest net.sourceforge.liferea \
+      --object-path /net/sourceforge/liferea \
+      --method org.gtk.Actions.List >/dev/null 2>&1; then
+      break
+    fi
+    sleep 0.5
+  done
+fi
+
 if pgrep -x liferea >/dev/null 2>&1; then
   echo "触发 Liferea 刷新所有订阅源..." >&2
   gdbus call --session --dest net.sourceforge.liferea \

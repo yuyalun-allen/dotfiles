@@ -1,5 +1,5 @@
 ---
-name: academic-writing
+name: paper-writing
 description: 用户会向你指定一份文稿，例如论文的某个章节大纲或文本，你需要协助用户按照学术表达的标准修订文稿内容。
 ---
 

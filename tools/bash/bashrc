@@ -86,7 +86,8 @@ fi
 
 export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890
 
-export no_proxy="localhost, 127.0.0.1, 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 172.29.0.0/16, ::1, .local"
+export no_proxy="localhost, 127.0.0.1, 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 172.29.0.0/16, 100.94.146.87, ::1, .local, desktop-allen, matebook-allen, yoga-allen"
+export NO_PROXY="$no_proxy"
 
 # RBENV
 eval "$(rbenv init -)"
@@ -102,8 +103,10 @@ alias poweroff="systemctl poweroff"
 # ===== 游戏菜单：自包含文件，含菜单命令 =====
 source "$HOME/dotfiles/tools/bash/bash-game-menu.sh"
 
-# Quick bash command lookup via pi
-how() { pi -p "写一个 bash 命令：$*。给出命令和解释，我用的 Arch Linux。"; }
+# Quick bash command lookup via llm
+how() { llm "写一个 bash 命令：$*。给出命令和解释，我用的 Arch Linux。"; }
+what() { llm "解释这个命令或概念：$*。简要说明其作用、参数含义及常见使用场景。"; }
+why() { llm "回答以下问题：$*。说明原因。"; }
 
 # auto-starts
 

@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "typeRoots": [
+      "/home/allen/.config/pi/agent/npm/node_modules/@types"
+    ],
+    "paths": {
+      "@earendil-works/pi-coding-agent": [
+        "/home/allen/.config/nvm/versions/node/v20.19.5/lib/node_modules/pi-permission-system/node_modules/@mariozechner/pi-coding-agent/dist/index.d.ts"
+      ],
+      "@mariozechner/pi-coding-agent": [
+        "/home/allen/.config/nvm/versions/node/v20.19.5/lib/node_modules/pi-permission-system/node_modules/@mariozechner/pi-coding-agent/dist/index.d.ts"
+      ],
+      "@earendil-works/pi-ai": [
+        "/home/allen/.config/nvm/versions/node/v20.19.5/lib/node_modules/pi-permission-system/node_modules/@mariozechner/pi-ai/dist/index.d.ts"
+      ],
+      "@sinclair/typebox": [
+        "/home/allen/.config/nvm/versions/node/v20.19.5/lib/node_modules/pi-permission-system/node_modules/@sinclair/typebox/build/cjs/index.d.ts"
+      ],
+      "typebox": [
+        "/home/allen/.config/nvm/versions/node/v20.19.5/lib/node_modules/pi-permission-system/node_modules/@sinclair/typebox/build/cjs/index.d.ts"
+      ]
+    },
+    "strict": true,
+    "skipLibCheck": true
+  }
+}

@@ -6,15 +6,11 @@
  *
  * Tools provided:
  *   web_search        – Smart router: auto-chooses Tavily or Brave
- *   tavily_search     – Direct Tavily search (full params)
- *   tavily_extract    – Tavily URL content extraction
- *   brave_search      – Direct Brave web search
- *   brave_news_search – Direct Brave news search
+ *   web_page_extract  – URL content extraction (Tavily)
  *
  * Routing strategy (web_search):
- *   - News queries → Brave News (native news, no extra cost)
  *   - AI answer / raw content needed → Tavily (core strength)
- *   - Finance → Tavily (native finance topic)
+ *   - News / Finance → Tavily
  *   - General → 1:1 round-robin between Tavily & Brave
  *   - Fallback: if one fails, auto-retry with the other
  *
@@ -88,20 +84,6 @@ let requestCounter = 0;
 function nextEngine(): "tavily" | "brave" {
 	requestCounter++;
 	return requestCounter % 2 === 0 ? "tavily" : "brave";
-}
-
-// ═══════════════════════════════════════════════════════════════════
-//  Query Intent Detection
-// ═══════════════════════════════════════════════════════════════════
-
-const NEWS_KEYWORDS = [
-	"news", "latest", "breaking", "update", "headline",
-	"今", "最新", "新闻", "消息", "动态", "快讯",
-];
-
-function isNewsQuery(query: string): boolean {
-	const q = query.toLowerCase();
-	return NEWS_KEYWORDS.some((kw) => q.includes(kw));
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -278,7 +260,6 @@ async function tavilyExtract(
 // ═══════════════════════════════════════════════════════════════════
 
 const BRAVE_WEB = "https://api.search.brave.com/res/v1/web/search";
-const BRAVE_NEWS = "https://api.search.brave.com/res/v1/news/search";
 
 interface BraveResult {
 	title: string;
@@ -346,29 +327,6 @@ async function smartSearch(
 ): Promise<{ text: string; details: Record<string, unknown> }> {
 	const needAnswer = !!params.includeAnswer;
 	const needRawContent = !!params.includeRawContent;
-	const isNews = isNewsQuery(query) || params.topic === "news";
-
-	// News → Brave News
-	if (isNews) {
-		const braveResults = await braveRequest(BRAVE_NEWS, query, {
-			count: params.maxResults ?? 5,
-			freshness: params.timeRange
-				? ({ day: "pd", week: "pw", month: "pm", year: "py" } as Record<string, string>)[params.timeRange]
-				: undefined,
-		}, signal);
-
-		const lines: string[] = [];
-		lines.push(`[Brave News] ${query}`);
-		lines.push("");
-		for (const r of braveResults.slice(0, params.maxResults ?? 5)) {
-			lines.push(`📰 ${r.title}`);
-			lines.push(`   ${r.url}`);
-			if (r.description) lines.push(`   ${r.description.slice(0, 250)}`);
-			if (r.age) lines.push(`   (${r.age})`);
-			lines.push("");
-		}
-		return { text: lines.join("\n"), details: { engine: "brave-news", count: braveResults.length } };
-	}
 
 	// Answer / raw content → Tavily
 	if (needAnswer || needRawContent) {
@@ -386,11 +344,11 @@ async function smartSearch(
 		}, signal);
 	}
 
-	// Finance → Tavily
-	if (params.topic === "finance") {
+	// Finance / News topic if explicitly passed → Tavily
+	if (params.topic === "finance" || params.topic === "news") {
 		return tavilySearch(query, {
 			...params,
-			topic: "finance",
+			topic: params.topic,
 		}, signal);
 	}
 
@@ -448,16 +406,13 @@ export default function (pi: ExtensionAPI) {
 		name: "web_search",
 		label: "Web Search",
 		description:
-			"Intelligent web search routing between Tavily (search+extract) and Brave (web+news). " +
-			"Both ~1k free/month. News→Brave, AI answer/raw→Tavily, finance→Tavily, general→round-robin. " +
+			"Intelligent web search routing between Tavily and Brave Search. " +
 			"Auto-fallback if one engine fails. Returns ranked results with titles, URLs, and snippets.",
-		promptSnippet: "web_search - ⭐ DEFAULT search tool. Routes between Tavily & Brave (web+news+finance+answer)",
+		promptSnippet: "web_search - ⭐ DEFAULT search tool. Routes between Tavily & Brave",
 		promptGuidelines: [
-			"Use web_search as the DEFAULT for ALL search needs — it auto-routes between Tavily and Brave to maximize free tiers.",
-			"For time-sensitive queries (news, stock prices), set topic='news' or time_range.",
-			"For finance queries, set topic='finance' (routes to Tavily's finance topic).",
+			"Use web_search as the DEFAULT for ALL search needs.",
 			"Set include_answer='basic'/'advanced' for AI-generated answer (routes to Tavily).",
-			"For page content from specific URLs, use tavily_extract instead.",
+			"For page content from specific URLs, use web_page_extract instead.",
 			"DO NOT call multiple search tools in one turn. Use web_search once and read the results.",
 		],
 		parameters: Type.Object({
@@ -465,9 +420,11 @@ export default function (pi: ExtensionAPI) {
 			max_results: Type.Optional(
 				Type.Integer({ description: "Maximum results (1-20, default: 5)", minimum: 1, maximum: 20 }),
 			),
-			topic: StringEnum(
-				["general", "news", "finance"] as const,
-				{ description: "Search topic: general, news, or finance" },
+			topic: Type.Optional(
+				StringEnum(
+					["general", "news", "finance"] as const,
+					{ description: "Optional search topic filter" },
+				),
 			),
 			time_range: Type.Optional(
 				StringEnum(
@@ -591,16 +548,16 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
-	// ─── tavily_extract ─────────────────────────────────────────
+	// ─── web_page_extract ───────────────────────────────────────
 
 	pi.registerTool({
-		name: "tavily_extract",
-		label: "Tavily Extract",
+		name: "web_page_extract",
+		label: "Web Page Extract",
 		description:
-			"Extract clean, LLM-ready content from one or more URLs using Tavily. " +
+			"Extract clean, LLM-ready content from one or more URLs. " +
 			"Supports basic (1 credit/5 URLs) and advanced (2 credits/5 URLs) extraction depths, " +
 			"optional query-based chunk reranking, and image extraction.",
-		promptSnippet: "tavily_extract - Extract page content from known URLs (after web_search)",
+		promptSnippet: "web_page_extract - Extract page content from known URLs (after web_search)",
 		promptGuidelines: [
 			"Use AFTER web_search — when you have specific URLs and need their full page content.",
 			"Extract only the most promising results from a web_search, not multiple randomly.",
@@ -639,125 +596,4 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
-	// ─── brave_search (direct Brave) ────────────────────────────
-
-	pi.registerTool({
-		name: "brave_search",
-		label: "Brave Search",
-		description:
-			"Direct Brave Web Search. Returns web results with titles, URLs, and descriptions. " +
-			"Supports country, language, safe search, and freshness filters.",
-		promptSnippet: "brave_search - Direct Brave web search (niche). Only if user explicitly mentions \"Brave\"",
-		promptGuidelines: [
-			"ONLY use this when the user explicitly mentions 'Brave' by name.",
-			"For all general search needs, use web_search instead.",
-			"Supports country targeting with 2-letter code (e.g., 'US', 'CN', 'JP').",
-			"Set safesearch to 'off', 'moderate' (default), or 'strict'.",
-			"Do NOT call both brave_search and web_search in the same turn.",
-		],
-		parameters: Type.Object({
-			query: Type.String({ description: "Search query (max 400 chars)" }),
-			count: Type.Optional(
-				Type.Integer({ description: "Number of results (1-20, default: 10)", minimum: 1, maximum: 20 }),
-			),
-			country: Type.Optional(
-				Type.String({ description: "2-letter country code" }),
-			),
-			search_lang: Type.Optional(
-				Type.String({ description: "Search language (e.g., 'en', 'zh')" }),
-			),
-			safesearch: StringEnum(
-				["off", "moderate", "strict"] as const,
-				{ description: "Adult content filter" },
-			),
-			freshness: StringEnum(
-				["day", "week", "month", "year"] as const,
-				{ description: "Time-based freshness filter" },
-			),
-		}),
-
-		async execute(_id, params, signal, _upd, _ctx) {
-			const results = await braveRequest(BRAVE_WEB, params.query, {
-				count: params.count ?? 10,
-				country: params.country,
-				search_lang: params.search_lang,
-				safesearch: params.safesearch ?? "moderate",
-				freshness: params.freshness
-					? ({ day: "pd", week: "pw", month: "pm", year: "py" } as Record<string, string>)[params.freshness]
-					: undefined,
-			}, signal);
-
-			const lines: string[] = [];
-			lines.push(`[Brave Search] ${params.query}`);
-			lines.push("");
-			for (const r of results) {
-				lines.push(`🔗 ${r.title}`);
-				lines.push(`   ${r.url}`);
-				if (r.description) lines.push(`   ${r.description.slice(0, 300)}`);
-				if (r.age) lines.push(`   (${r.age})`);
-				lines.push("");
-			}
-
-			return {
-				content: [{ type: "text", text: lines.join("\n") }],
-				details: { engine: "brave", count: results.length },
-			};
-		},
-	});
-
-	// ─── brave_news_search (direct Brave news) ──────────────────
-
-	pi.registerTool({
-		name: "brave_news_search",
-		label: "Brave News Search",
-		description:
-			"Direct Brave News Search. Returns recent news articles with titles, URLs, descriptions, and publish dates. " +
-			"Best for breaking news and current events.",
-		promptSnippet: "brave_news_search - Direct Brave news search (niche). Only if user explicitly mentions \"Brave\"",
-		promptGuidelines: [
-			"ONLY use this when the user explicitly mentions 'Brave' or wants news-specific Brave features.",
-			"For news searches, just use web_search with topic='news' — it routes to Brave News automatically.",
-			"Supports freshness filter and country/language targeting.",
-			"Do NOT call both brave_news_search and web_search in the same turn.",
-		],
-		parameters: Type.Object({
-			query: Type.String({ description: "News search query" }),
-			count: Type.Optional(
-				Type.Integer({ description: "Number of results (1-20, default: 10)", minimum: 1, maximum: 20 }),
-			),
-			country: Type.Optional(Type.String({ description: "2-letter country code" })),
-			search_lang: Type.Optional(Type.String({ description: "Search language" })),
-			freshness: StringEnum(
-				["day", "week", "month", "year"] as const,
-				{ description: "Freshness filter" },
-			),
-		}),
-
-		async execute(_id, params, signal, _upd, _ctx) {
-			const results = await braveRequest(BRAVE_NEWS, params.query, {
-				count: params.count ?? 10,
-				country: params.country,
-				search_lang: params.search_lang,
-				freshness: params.freshness
-					? ({ day: "pd", week: "pw", month: "pm", year: "py" } as Record<string, string>)[params.freshness]
-					: undefined,
-			}, signal);
-
-			const lines: string[] = [];
-			lines.push(`[Brave News] ${params.query}`);
-			lines.push("");
-			for (const r of results) {
-				lines.push(`📰 ${r.title}`);
-				lines.push(`   ${r.url}`);
-				if (r.description) lines.push(`   ${r.description.slice(0, 300)}`);
-				if (r.age) lines.push(`   (${r.age})`);
-				lines.push("");
-			}
-
-			return {
-				content: [{ type: "text", text: lines.join("\n") }],
-				details: { engine: "brave-news", count: results.length },
-			};
-		},
-	});
 }

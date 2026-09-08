@@ -18,7 +18,6 @@ import os, sys, re, html, sqlite3, subprocess, tempfile, datetime
 
 DB = os.path.expanduser("~/.local/share/liferea/liferea.db")
 OUT_DIR = os.path.expanduser("~/Desktop/rule-book/news")
-PROVIDER = "google"
 MODEL = "gemini-3.5-flash-lite"
 
 def clean(desc):
@@ -31,26 +30,15 @@ def clean(desc):
     d = re.sub(r'\n\s*\n+', '\n', d)
     return d.strip()
 
-def call_pi(prompt, context=""):
-    # 用 --system-prompt 覆盖默认 coding-assistant 提示词，避免模型去查找文件/调用工具
+def call_llm(prompt, context=""):
     sysp = ("你是一个新闻摘要助手。只基于用户提供的文本内容进行概括总结，"
             "绝对不要查找文件、不要调用任何工具、不要输出代码块，直接输出 Markdown 正文。")
-    args = ["pi", "--provider", PROVIDER, "--model", MODEL,
-            "--no-tools", "--no-session", "--print",
-            "--system-prompt", sysp]
-    ctx = None
-    if context:
-        fd, ctx = tempfile.mkstemp(suffix=".txt")
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write(context)
-        args += ["--append-system-prompt", ctx]
-    args += [prompt]
-    try:
-        r = subprocess.run(args, capture_output=True, text=True, timeout=180)
-        out = (r.stdout or "").strip()
-    finally:
-        if ctx and os.path.exists(ctx):
-            os.unlink(ctx)
+    full_prompt = f"{context}\n\n---\n\n{prompt}" if context else prompt
+    args = ["llm", "prompt", "-m", MODEL, "-s", sysp]
+    r = subprocess.run(args, input=full_prompt, capture_output=True, text=True, timeout=180)
+    if r.returncode != 0:
+        raise RuntimeError(f"llm error: {r.stderr.strip()}")
+    out = (r.stdout or "").strip()
     m = re.fullmatch(r'```[a-zA-Z]*\s*\n?(.*?)\n?```', out, re.S)
     if m:
         out = m.group(1).strip()
@@ -108,16 +96,18 @@ def main():
                 pass
     # 默认归入今天：窗口=[昨天05:00, 今天05:00]，即给今天看的简报；可手动传日期
     date = date or datetime.date.today().isoformat()
+    d_obj = datetime.date.fromisoformat(date)
+    prev_date = (d_obj - datetime.timedelta(days=1)).isoformat()
     start_ts, end_ts = window_ts(date)
     os.makedirs(OUT_DIR, exist_ok=True)
     out_file = os.path.join(OUT_DIR, f"{date}.md")
 
     order, folders = load(start_ts, end_ts)
     if not order:
-        print(f"【{date}】窗口[{date} 前一天 05:00 → {date} 05:00] 内没有 Liferea 缓存的文章，已退出。", file=sys.stderr)
+        print(f"【{date}】窗口[{prev_date} 05:00 → {date} 05:00] 内没有 Liferea 缓存的文章，已退出。", file=sys.stderr)
         sys.exit(1)
 
-    print(f"窗口 前一天 05:00 → {date} 05:00（归入 {date}）："
+    print(f"窗口 [{prev_date} 05:00 → {date} 05:00]（归入 {date}）："
           f"共 {sum(len(s) for f in folders.values() for s in f.values())} 篇文章，"
           f"{sum(len(s) for s in folders.values())} 个源，{len(order)} 个文件夹", file=sys.stderr)
 
@@ -130,7 +120,7 @@ def main():
                  "用 Markdown，格式：每条一行 '**标题** — 一句话中文摘要（链接）'。"
                  "如无实质内容就只列标题。直接输出，不要代码块。")
             try:
-                src_summaries[(folder, src)] = call_pi(p, ctx)
+                src_summaries[(folder, src)] = call_llm(p, ctx)
                 print(f"  源级完成: {folder} / {src}", file=sys.stderr)
             except Exception as e:
                 print(f"  源级失败: {folder}/{src}: {e}", file=sys.stderr)
@@ -145,7 +135,7 @@ def main():
              f"保留每个源为 ### 子标题，条目标题与链接都要保留，中文概括可精简。"
              f"不要代码块。")
         try:
-            folder_md[folder] = call_pi(p, ctx)
+            folder_md[folder] = call_llm(p, ctx)
             print(f"  文件夹级完成: {folder}", file=sys.stderr)
         except Exception as e:
             print(f"  文件夹级失败: {folder}: {e}", file=sys.stderr)
@@ -157,7 +147,7 @@ def main():
          "输出 5-8 条，每条格式 '**序号. 一句话要点** （来源）'，"
          "只保留最重要、最具信息量的新闻。直接输出 Markdown 列表，不要代码块。")
     try:
-        top = call_pi(p, ctx)
+        top = call_llm(p, ctx)
         print("  今日要闻完成", file=sys.stderr)
     except Exception as e:
         print(f"  今日要闻失败: {e}", file=sys.stderr)

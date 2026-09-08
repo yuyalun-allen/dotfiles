@@ -1,13 +1,14 @@
 {
-  "lastChangelogVersion": "0.84.2",
-  "defaultProvider": "bailian",
-  "defaultModel": "deepseek-v4-flash",
-  "defaultThinkingLevel": "medium",
+  "lastChangelogVersion": "0.85.0",
+  "defaultProvider": "antigravity",
+  "defaultModel": "gemini-3.7-flash",
+  "defaultThinkingLevel": "low",
   "hideThinkingBlock": false,
   "packages": [
     "git:github.com/obra/superpowers",
     "npm:pi-subagents",
-    "npm:pi-antigravity"
+    "npm:pi-antigravity",
+    "npm:@narumitw/pi-chrome-devtools"
   ],
   "theme": "dark"
 }

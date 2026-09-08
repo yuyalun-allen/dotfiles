@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "typeRoots": [
+      "/home/allen/.config/pi/agent/npm/node_modules/@types"
+    ],
+    "paths": {
+      "@earendil-works/pi-coding-agent": [
+        "/home/allen/.config/nvm/versions/node/v20.19.5/lib/node_modules/pi-permission-system/node_modules/@mariozechner/pi-coding-agent/dist/index.d.ts"
+      ],
+      "@mariozechner/pi-coding-agent": [
+        "/home/allen/.config/nvm/versions/node/v20.19.5/lib/node_modules/pi-permission-system/node_modules/@mariozechner/pi-coding-agent/dist/index.d.ts"
+      ]
+    },
+    "strict": true,
+    "skipLibCheck": true
+  }
+}
