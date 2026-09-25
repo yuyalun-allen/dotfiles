@@ -88,6 +88,7 @@ for repo in \
   https://github.com/img-paste-devs/img-paste.vim.git \
   https://github.com/lervag/vimtex.git \
   https://github.com/liuchengxu/vim-clap.git \
+  https://github.com/mcchrish/nnn.vim.git \
   https://github.com/neoclide/coc.nvim.git; do
   clone "$repo" "$VIM_PLUGIN_START_HOME/$(basename "$repo" .git)"
 done

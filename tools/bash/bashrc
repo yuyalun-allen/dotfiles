@@ -77,16 +77,15 @@ function hstrnotiocsti {
 if [[ $- =~ .*i.* ]]; then bind -x '"\C-h": "hstrnotiocsti"'; fi
 export HSTR_TIOCSTI=n
 
+# mise
 
+export MISE_DISABLE_TOOLS="ruby node"
 
 # Proxy
 
 export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890
-
 export no_proxy="localhost, 127.0.0.1, 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 172.29.0.0/16, 100.94.146.87, ::1, .local, desktop-allen, matebook-allen, yoga-allen"
 export NO_PROXY="$no_proxy"
-
-
 
 # Alias
 
