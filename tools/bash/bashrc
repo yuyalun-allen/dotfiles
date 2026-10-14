@@ -83,9 +83,9 @@ export MISE_DISABLE_TOOLS="ruby node"
 
 # Proxy
 
-export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890
-export no_proxy="localhost, 127.0.0.1, 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 172.29.0.0/16, 100.94.146.87, ::1, .local, desktop-allen, matebook-allen, yoga-allen"
-export NO_PROXY="$no_proxy"
+# export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890
+# export no_proxy="localhost, 127.0.0.1, 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 172.29.0.0/16, 100.94.146.87, ::1, .local, desktop-allen, matebook-allen, yoga-allen"
+# export NO_PROXY="$no_proxy"
 
 # Alias
 
@@ -94,6 +94,9 @@ alias activate=". ./.venv/bin/activate"
 
 alias reboot="systemctl reboot"
 alias poweroff="systemctl poweroff"
+
+alias log='echo "> 注：人类编辑，Agent 只读" > memo.md && vim memo.md'
+
 
 # ===== 游戏菜单：自包含文件，含菜单命令 =====
 source "$HOME/dotfiles/tools/bash/bash-game-menu.sh"

@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.85.1",
+  "lastChangelogVersion": "1.1.0",
   "defaultProvider": "antigravity",
-  "defaultModel": "gemini-3.7-flash",
+  "defaultModel": "gemini-3.8-flash",
   "defaultThinkingLevel": "low",
   "hideThinkingBlock": true,
   "packages": [
@@ -10,5 +10,6 @@
     "npm:pi-antigravity",
     "npm:@narumitw/pi-chrome-devtools"
   ],
-  "theme": "dark"
+  "theme": "dark",
+  "tuiMode": "regular"
 }
