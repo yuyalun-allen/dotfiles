@@ -74,6 +74,7 @@ bin/summarize_news.py|$HOME/.local/bin/summarize_news.py
 bin/news_tts.py|$HOME/.local/bin/news_tts.py
 bin/yt_feed.py|$HOME/.local/bin/yt_feed.py
 bin/bili_feed.py|$HOME/.local/bin/bili_feed.py
+bin/update-singbox.py|$HOME/.local/bin/update-singbox.py
 EOF
 
 # 3. vim 插件（vendor pack 结构）
@@ -150,5 +151,10 @@ for ext_dir in "$PI_AGENT_CONFIG"/extensions/*/; do
     (cd "$ext_dir" && npm install --silent 2>/dev/null) || true
   fi
 done
+
+# 同步 Claude Code 技能到 dotfiles (当 -u/UPDATE=1 时执行)
+if [ "${UPDATE:-0}" = "1" ] && [ -x "$DOTFILES_DIR/bin/sync-skills" ]; then
+  "$DOTFILES_DIR/bin/sync-skills"
+fi
 
 echo "Dotfiles successfully linked to XDG directories."

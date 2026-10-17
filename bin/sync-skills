@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_SKILLS="$HOME/dotfiles/tools/pi/agent/skills"
+CLAUDE_SYNCED_BASE="$HOME/.claude/skills/synced"
+
+# 1. 动态找到 Claude Code 的最新同步目录 (无需硬编码 UUID)
+LATEST_CLAUDE_DIR=$(find "$CLAUDE_SYNCED_BASE" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -n 1 || true)
+
+if [ -n "$LATEST_CLAUDE_DIR" ] && [ -d "$LATEST_CLAUDE_DIR" ]; then
+    echo "▶ 从 Claude Code 同步基础技能: $LATEST_CLAUDE_DIR -> $DOTFILES_SKILLS"
+
+    SKILLS_TO_SYNC=(
+        "docx"
+        "pptx"
+        "xlsx"
+        "pdf"
+        "skill-creator"
+        "deep-research"
+    )
+
+    for skill in "${SKILLS_TO_SYNC[@]}"; do
+        if [ -d "$LATEST_CLAUDE_DIR/$skill" ]; then
+            echo "  - 同步 $skill..."
+            rsync -a --delete \
+                --exclude='__pycache__' \
+                --exclude='*.pyc' \
+                "$LATEST_CLAUDE_DIR/$skill/" "$DOTFILES_SKILLS/$skill/"
+        fi
+    done
+else
+    echo "ℹ 未检测到 Claude Code 的 synced skills 目录，跳过核心技能同步。"
+fi
+
+# 2. 同步官方插件市场的高质量技能
+PLUGIN_SKILLS_BASE="$HOME/.claude/plugins/marketplaces/claude-plugins-official"
+if [ -d "$PLUGIN_SKILLS_BASE" ]; then
+    echo "▶ 从 Claude Plugins 市场同步插件技能..."
+    PLUGINS_TO_SYNC=(
+        "frontend-design:frontend-design/skills/frontend-design"
+    )
+    for item in "${PLUGINS_TO_SYNC[@]}"; do
+        name="${item%%:*}"
+        subpath="${item##*:}"
+        src="$PLUGIN_SKILLS_BASE/plugins/$subpath"
+        if [ -d "$src" ]; then
+            echo "  - 同步 $name..."
+            rsync -a --delete \
+                --exclude='__pycache__' \
+                --exclude='*.pyc' \
+                "$src/" "$DOTFILES_SKILLS/$name/"
+        fi
+    done
+fi
+
+# 3. 同步 google-colab-cli 自带的 colab-operator 技能
+COLAB_SKILL_SRC=$(find "$HOME/.local/share/pipx/venvs/google-colab-cli" -name "SKILL.md" 2>/dev/null | head -n 1 || true)
+if [ -n "$COLAB_SKILL_SRC" ] && [ -f "$COLAB_SKILL_SRC" ]; then
+    echo "▶ 从 google-colab-cli 同步技能..."
+    echo "  - 同步 colab-operator..."
+    mkdir -p "$DOTFILES_SKILLS/colab-operator"
+    cp -u "$COLAB_SKILL_SRC" "$DOTFILES_SKILLS/colab-operator/SKILL.md"
+fi
+
+echo "✔ 技能同步检查完毕！可通过 'git -C ~/dotfiles diff' 查看变更。"

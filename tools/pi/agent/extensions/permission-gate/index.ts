@@ -5,14 +5,12 @@
  * - 危险 bash 命令需要权限:rm -rf、sudo、chmod/chown 777、sed -i、perl -i、
  *   重定向写入(>、>>)、tee、install、cp、python -c 文件写操作
  * - write / edit 工具需要权限
- * - 受影响路径位于"允许目录"内、或命令已在白名单中时自动放行;
- *   否则弹窗确认(无 UI 时阻止)
- *
- * 允许规则(仅当前 session 生效,不持久化):
- * - /permit <dir>      允许对指定目录的所有操作
- * - /permit(无参数)    允许"当前命令":最近一次被拦截/询问的危险命令,加入命令白名单
- * - /permit            无当前命令时显示允许列表
- * - /unpermit <目录|命令> 撤销允许项
+ * - 默认模式:弹窗确认(无 UI 时阻止)
+ * - /yolo 开关:
+ *     /yolo [on|off]           全局开关(开启后主会话与子 agent 全部放行)
+ *     /yolo sub <dir>          专门给 subagent 开启 YOLO，并用 bwrap 严格沙箱隔离在 <dir> 目录
+ *     /yolo sub off            关闭 subagent 专属 YOLO
+ *     /yolo status             查看当前安全与沙箱状态
  */
 
 import { homedir } from "node:os";
@@ -20,12 +18,21 @@ import { join, resolve, sep } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 // ---------------------------------------------------------------------------
-// 允许状态(仅内存,session 内生效)
+// 状态与路径工具(全局共享,session 内生效,subagent 可继承)
 // ---------------------------------------------------------------------------
 
-const allowedDirs = new Set<string>(); // /permit <dir> 允许的目录
-const allowedCommands = new Set<string>(); // /permit(无参数)允许的命令
-let lastDangerousCommand: string | null = null; // 最近一次需要授权的危险命令
+interface PermGateState {
+	yolo: boolean;
+	subagentSandboxDir: string | null;
+}
+
+const g = globalThis as unknown as { __pi_permission_gate__?: PermGateState };
+if (!g.__pi_permission_gate__) {
+	g.__pi_permission_gate__ = {
+		yolo: false,
+		subagentSandboxDir: null,
+	};
+}
 
 function expandHome(p: string): string {
 	if (p === "~") return homedir();
@@ -37,17 +44,45 @@ function normalizeDir(input: string, cwd: string): string {
 	return resolve(cwd, expandHome(input.trim()));
 }
 
-/** 规范化命令字符串(折叠空白),用于白名单匹配 */
-export function normalizeCommand(cmd: string): string {
-	return cmd.replace(/\s+/g, " ").trim();
+export function isPathInside(target: string, parentDir: string): boolean {
+	const absTarget = resolve(expandHome(target));
+	const absParent = resolve(expandHome(parentDir));
+	const base = absParent.endsWith(sep) ? absParent : absParent + sep;
+	return absTarget === absParent || absTarget.startsWith(base);
 }
 
-export function isAllowedPath(p: string, allowedDirs: string[]): boolean {
-	const abs = resolve(expandHome(p));
-	return allowedDirs.some((dir) => {
-		const base = dir.endsWith(sep) ? dir : dir + sep;
-		return abs === dir || abs.startsWith(base);
-	});
+export function isYoloEnabled(): boolean {
+	return Boolean(g.__pi_permission_gate__?.yolo);
+}
+
+export function setYolo(enabled: boolean): void {
+	if (!g.__pi_permission_gate__) {
+		g.__pi_permission_gate__ = { yolo: false, subagentSandboxDir: null };
+	}
+	g.__pi_permission_gate__.yolo = enabled;
+}
+
+export function getSubagentSandboxDir(): string | null {
+	return g.__pi_permission_gate__?.subagentSandboxDir ?? null;
+}
+
+export function setSubagentSandboxDir(dir: string | null): void {
+	if (!g.__pi_permission_gate__) {
+		g.__pi_permission_gate__ = { yolo: false, subagentSandboxDir: null };
+	}
+	g.__pi_permission_gate__.subagentSandboxDir = dir;
+}
+
+/**
+ * 将原始 bash 命令包装进 bwrap 沙箱:
+ * - 根文件系统全部只读 (--ro-bind / /)
+ * - 保障 /dev, /proc, /tmp
+ * - 只有 sandboxDir 可读写 (--bind)
+ * - 默认切换工作目录到 sandboxDir
+ */
+export function wrapCommandWithBwrap(rawCmd: string, sandboxDir: string): string {
+	const escapedDir = sandboxDir.replace(/'/g, "'\\''");
+	return `bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --bind '${escapedDir}' '${escapedDir}' --chdir '${escapedDir}' bash -c ${JSON.stringify(rawCmd)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -300,71 +335,120 @@ export function assessBash(command: string): BashAssessment {
 // ---------------------------------------------------------------------------
 
 export default function (pi: ExtensionAPI) {
-	// /permit <dir> | /permit | /unpermit <目录|命令>
-	pi.registerCommand("permit", {
-		description: "允许对指定目录的所有操作;无参数时允许最近一次被拦截的危险命令(仅当前会话)",
+	// /yolo [on|off|status|sub <dir>|sub off]
+	pi.registerCommand("yolo", {
+		description: "YOLO 安全模式与 Subagent bwrap 沙箱开关",
 		handler: async (args, ctx) => {
-			const arg = args.trim();
-			if (!arg) {
-				// 默认允许"当前命令"
-				if (lastDangerousCommand !== null) {
-					allowedCommands.add(normalizeCommand(lastDangerousCommand));
-					ctx.ui.notify(`已允许该命令,后续直接放行:\n${lastDangerousCommand}`, "info");
-					lastDangerousCommand = null;
+			const raw = args.trim();
+			const lower = raw.toLowerCase();
+			const parts = raw.split(/\s+/);
+			const subCmd = parts[0]?.toLowerCase();
+
+			// 1. subagent 专属沙箱 YOLO: /yolo sub <dir> 或 /yolo sub off
+			if (subCmd === "sub") {
+				const target = parts.slice(1).join(" ").trim();
+				if (!target || target === "status") {
+					const current = getSubagentSandboxDir();
+					ctx.ui.notify(
+						current
+							? `📦 Subagent bwrap 沙箱 YOLO: 开启\n目标目录: ${current}`
+							: "🛡️ Subagent bwrap 沙箱 YOLO: 未开启",
+						"info",
+					);
 					return;
 				}
-				// 无当前命令 → 显示允许列表
-				const dirs = [...allowedDirs];
-				const cmds = [...allowedCommands];
-				const sections: string[] = [];
-				if (dirs.length > 0) sections.push(`目录:\n${dirs.join("\n")}`);
-				if (cmds.length > 0) sections.push(`命令:\n${cmds.join("\n")}`);
+				if (target.toLowerCase() === "off" || target === "0") {
+					setSubagentSandboxDir(null);
+					ctx.ui.notify("🛡️ 已关闭 Subagent 沙箱 YOLO 模式", "info");
+					return;
+				}
+				const resolvedDir = normalizeDir(target, ctx.cwd);
+				setSubagentSandboxDir(resolvedDir);
 				ctx.ui.notify(
-					sections.length > 0
-						? `允许列表(当前会话):\n${sections.join("\n\n")}`
-						: "(允许列表为空;agent 执行危险命令被拦截后,输入 /permit 即可允许该命令)",
+					`🚀 已为 Subagent 开启 YOLO!\n已启用 bwrap 强隔离, 仅允许写入: ${resolvedDir}`,
+					"warning",
+				);
+				return;
+			}
+
+			// 2. 查看状态: /yolo status
+			if (lower === "status") {
+				const sandbox = getSubagentSandboxDir();
+				ctx.ui.notify(
+					`全局 YOLO: ${isYoloEnabled() ? "开启 🚀" : "关闭 🛡️"}\nSubagent 沙箱目录: ${sandbox ?? "未设置 (继承默认拦截)"}`,
 					"info",
 				);
 				return;
 			}
-			const dir = normalizeDir(arg, ctx.cwd);
-			allowedDirs.add(dir);
-			ctx.ui.notify(`已允许目录(当前会话): ${dir}`, "info");
-		},
-	});
 
-	pi.registerCommand("unpermit", {
-		description: "撤销允许:移除一个目录或命令(仅当前会话)",
-		handler: async (args, ctx) => {
-			const arg = args.trim();
-			if (!arg) {
-				ctx.ui.notify("用法: /unpermit <目录|命令>", "warning");
-				return;
+			// 3. 全局开/关: /yolo on / /yolo off
+			if (lower === "on" || lower === "1" || lower === "true") {
+				setYolo(true);
+				ctx.ui.notify("🚀 全局 YOLO 模式已开启: 所有命令与文件写入均自动放行(包括主会话与 subagent)", "warning");
+			} else if (lower === "off" || lower === "0" || lower === "false") {
+				setYolo(false);
+				ctx.ui.notify("🛡️ 全局 YOLO 模式已关闭: 恢复严格安全确认", "info");
+			} else {
+				// 无参数直接切换全局 YOLO 开关
+				const next = !isYoloEnabled();
+				setYolo(next);
+				if (next) {
+					ctx.ui.notify("🚀 全局 YOLO 模式已开启: 所有命令与文件写入均自动放行", "warning");
+				} else {
+					ctx.ui.notify("🛡️ 全局 YOLO 模式已关闭: 恢复严格安全确认", "info");
+				}
 			}
-			const removedCmd = allowedCommands.delete(normalizeCommand(arg));
-			const removedDir = allowedDirs.delete(normalizeDir(arg, ctx.cwd));
-			ctx.ui.notify(
-				removedCmd || removedDir ? `已移除: ${arg}` : `不在允许列表中: ${arg}`,
-				removedCmd || removedDir ? "info" : "warning",
-			);
 		},
 	});
 
 	pi.on("tool_call", async (event, ctx) => {
-		// write / edit:路径在允许目录内放行,否则确认
+		const isSubagent = !ctx.hasUI;
+		const subSandbox = getSubagentSandboxDir();
+
+		// 1. 全局 YOLO 开启时: 无论主会话还是子 agent，直接全放行
+		if (isYoloEnabled()) {
+			return undefined;
+		}
+
+		// 2. 如果是 Subagent, 并且配置了 /yolo sub <dir> 的 bwrap 沙箱
+		if (isSubagent && subSandbox !== null) {
+			if (event.toolName === "write" || event.toolName === "edit") {
+				const p = event.input.path as string;
+				if (isPathInside(p, subSandbox)) {
+					return undefined; // 沙箱目录内放行
+				}
+				return {
+					block: true,
+					reason: `[bwrap 沙箱保护] ${event.toolName} ${p} 超出沙箱工作目录(${subSandbox}), 已阻止修改`,
+				};
+			}
+
+			if (event.toolName === "bash") {
+				// 将子 agent 的 bash 命令透明包装进 bwrap 沙箱执行
+				const rawCommand = event.input.command as string;
+				event.input.command = wrapCommandWithBwrap(rawCommand, subSandbox);
+				return undefined; // 自动包装后直接安全放行！
+			}
+
+			return undefined;
+		}
+
+		// 3. 默认安全检查: write / edit 工具
 		if (event.toolName === "write" || event.toolName === "edit") {
 			const p = event.input.path as string;
-			if (isAllowedPath(p, [...allowedDirs])) return undefined;
-
 			if (!ctx.hasUI) {
-				return { block: true, reason: `${event.toolName} ${p} 超出允许目录,无 UI 确认,已阻止` };
+				return {
+					block: true,
+					reason: `${event.toolName} ${p} 需要权限确认, 无 UI 已阻止 (可用 /yolo 或 /yolo sub <dir> 开启放行)`,
+				};
 			}
 			const label = event.toolName === "write" ? "📝 创建/覆盖" : "✏️ 编辑";
-			const ok = await ctx.ui.confirm(`${label}文件: ${p}`, "路径不在允许目录内,允许吗?");
+			const ok = await ctx.ui.confirm(`${label}文件: ${p}`, "确定允许修改该文件吗?");
 			if (!ok) return { block: true, reason: "用户拒绝" };
 			return undefined;
 		}
 
+		// 4. 默认安全检查: bash 工具
 		if (event.toolName !== "bash") return undefined;
 
 		const command = event.input.command as string;
@@ -372,24 +456,16 @@ export default function (pi: ExtensionAPI) {
 
 		if (!result.dangerous) return undefined;
 
-		// 命令白名单:已允许的命令直接放行
-		if (allowedCommands.has(normalizeCommand(command))) return undefined;
-
-		// 路径全部在允许目录内 → 放行
-		if (result.paths !== null && result.paths.every((p) => isAllowedPath(p, [...allowedDirs]))) {
-			return undefined;
-		}
-
-		// 记录当前命令,供 /permit(无参数)授权
-		lastDangerousCommand = command;
-
 		if (!ctx.hasUI) {
-			return { block: true, reason: `危险命令被阻止(无 UI 确认,可用 /permit 允许该命令): ${command}` };
+			return {
+				block: true,
+				reason: `危险命令被阻止(无 UI 确认, 可用 /yolo 或 /yolo sub <dir> 开启放行): ${command}`,
+			};
 		}
 
 		const detail = result.paths === null ? "无法确定受影响路径" : `受影响路径:\n${result.paths.join("\n")}`;
-		const ok = await ctx.ui.confirm("⚠️ 危险命令", `${command}\n\n${detail}\n\n允许执行吗?(拒绝后可用 /permit 允许该命令)`);
-		if (!ok) return { block: true, reason: "用户拒绝(可用 /permit 允许该命令)" };
+		const ok = await ctx.ui.confirm("⚠️ 危险命令", `${command}\n\n${detail}\n\n允许执行吗?`);
+		if (!ok) return { block: true, reason: "用户拒绝" };
 		return undefined;
 	});
 }
