@@ -1,0 +1,9 @@
+OMARCHY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+source "$OMARCHY_DIR/shell"
+source "$OMARCHY_DIR/aliases"
+source "$OMARCHY_DIR/functions"
+source "$OMARCHY_DIR/init"
+source "$OMARCHY_DIR/envs"
+[[ $- == *i* ]] && bind -f "$OMARCHY_DIR/inputrc"
+

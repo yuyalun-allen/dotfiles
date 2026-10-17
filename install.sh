@@ -48,7 +48,6 @@ clone() {
 }
 
 # 1. Shell
-clone https://github.com/basecamp/omarchy.git "$XDG_DATA_HOME/omarchy"
 link "$DOTFILES_DIR/tools/bash/bash_profile" "$HOME/.bash_profile"
 link "$DOTFILES_DIR/tools/bash/bashrc" "$HOME/.bashrc"
 link "$DOTFILES_DIR/tools/bash/profile" "$HOME/.profile"
@@ -64,6 +63,7 @@ tools/maven/settings.xml|$XDG_CONFIG_HOME/maven/settings.xml
 tools/git/config|$XDG_CONFIG_HOME/git/config
 tools/git/gitignore_global|$XDG_CONFIG_HOME/git/gitignore_global
 tools/kitty/kitty.conf|$XDG_CONFIG_HOME/kitty/kitty.conf
+tools/kitty/tokyo-night.conf|$XDG_CONFIG_HOME/kitty/tokyo-night.conf
 tools/tmux/tmux.conf|$XDG_CONFIG_HOME/tmux/tmux.conf
 tools/vim/vimrc|$XDG_CONFIG_HOME/vim/vimrc
 tools/vim/coc-settings.json|$XDG_CONFIG_HOME/vim/coc-settings.json
