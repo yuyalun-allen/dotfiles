@@ -52,14 +52,17 @@ def trigger_reload():
         return False
 
 def build_optimized_config(remote_cfg, local_cfg):
-    # 1. 动态提取自定义节点（排除订阅原有节点及脚本管理的分组）
+    # 1. 动态提取自定义节点（排除订阅原有节点、脚本管理的分组以及黑名单失效节点如魔戒）
     remote_outbounds = remote_cfg.get("outbounds", [])
     remote_tags = {o["tag"] for o in remote_outbounds if "tag" in o}
     managed_groups = {"AI", "YouTube", "Proxy", "Media", "gpt", "Express", "Download", "Netflix"}
+    blacklisted_keywords = ("美国LA-优化", "mojie", "mojcn", "cnmjin")
 
     custom_nodes = [
         o for o in local_cfg.get("outbounds", [])
-        if o.get("tag") not in remote_tags and o.get("tag") not in managed_groups
+        if o.get("tag") not in remote_tags 
+        and o.get("tag") not in managed_groups
+        and not any(kw in o.get("tag", "") or kw in o.get("server", "") for kw in blacklisted_keywords)
     ]
     custom_node_tags = [o["tag"] for o in custom_nodes]
 
@@ -103,7 +106,7 @@ def build_optimized_config(remote_cfg, local_cfg):
     youtube_group = {
         "type": "selector",
         "tag": "YouTube",
-        "outbounds": ["auto", "auto-anytls"] + asia_nodes + netflix_nodes + ["direct"],
+        "outbounds": ["auto", "Download"] + asia_nodes + netflix_nodes + ["direct"],
         "default": "auto"
     }
 

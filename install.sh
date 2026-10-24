@@ -75,6 +75,7 @@ bin/news_tts.py|$HOME/.local/bin/news_tts.py
 bin/yt_feed.py|$HOME/.local/bin/yt_feed.py
 bin/bili_feed.py|$HOME/.local/bin/bili_feed.py
 bin/update-singbox.py|$HOME/.local/bin/update-singbox.py
+bin/clean-cache|$HOME/.local/bin/clean-cache
 EOF
 
 # 3. vim 插件（vendor pack 结构）

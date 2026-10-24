@@ -12,7 +12,7 @@
 [init]
 	defaultBranch = master
 [credential]
-	helper = store
+	helper = store --file ~/.config/git/credentials
 [merge]
   conflictstyle = zdiff3
 	tool = vimdiff

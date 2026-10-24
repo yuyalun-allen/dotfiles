@@ -3,3 +3,7 @@
 写入 sections/abstract.tex。
 
 创建仓库并提交（提交范围为 main.tex 和 sections/），后续变更也需要记得提交并提供有意义的提交信息。
+
+---
+
+$@
