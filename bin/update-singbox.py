@@ -311,12 +311,16 @@ def build_optimized_config(remote_cfg, local_cfg):
         "strategy": "ipv4_only"
     }
 
+    exp_cfg = dict(local_cfg.get("experimental", {}))
+    exp_cfg.setdefault("cache_file", {"enabled": True, "cache_id": "glados"})
+    clash_api = dict(exp_cfg.get("clash_api", {}))
+    clash_api["external_controller"] = "0.0.0.0:9990"
+    clash_api.pop("secret", None)
+    exp_cfg["clash_api"] = clash_api
+
     final_cfg = {
         "log": local_cfg.get("log", {"level": "info", "timestamp": True}),
-        "experimental": local_cfg.get("experimental", {
-            "cache_file": {"enabled": True, "cache_id": "glados"},
-            "clash_api": {"external_controller": "127.0.0.1:9990"}
-        }),
+        "experimental": exp_cfg,
         "dns": dns_config,
         "http_clients": [{"tag": "rule-fetch", "detour": "auto"}],
         "inbounds": [tun_inbound],
