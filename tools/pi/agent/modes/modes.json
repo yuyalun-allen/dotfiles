@@ -4,8 +4,6 @@
       "kind": "major",
       "badge": "📄 paper",
       "description": "学术论文模式：集成论文写作与审稿评估技能，排版与学术规范指导",
-      "isolateSkills": true,
-      "skills": ["paper-writing", "paper-reviewing", "deep-research", "web-usage", "pdf", "docx"],
       "skillPaths": ["~/.config/pi/agent/modes/paper/skills"],
       "preloadSkills": ["paper-writing"],
       "thinkingLevel": "high",
@@ -18,8 +16,6 @@
       "kind": "major",
       "badge": "🧪 exp",
       "description": "实验计算模式：挂载 Colab / GPU 云端环境与自动化实验脚本能力",
-      "isolateSkills": true,
-      "skills": ["colab-operator", "web-usage", "deep-research"],
       "skillPaths": ["~/.config/pi/agent/modes/experiment/skills"],
       "preloadSkills": ["colab-operator"],
       "instructions": "当前处于【实验计算模式 (experiment-mode)】。\n- 专注于算法实验配置、GPU/TPU 计算任务执行、环境依赖管理及实验数据产出。"
@@ -28,8 +24,6 @@
       "kind": "major",
       "badge": "📊 office",
       "description": "办公文档模式：Word / Excel / PPT / PDF 文档与图表排版处理",
-      "isolateSkills": true,
-      "skills": ["docx", "xlsx", "pptx", "pdf", "theme-factory", "deep-research", "web-usage"],
       "skillPaths": [
         "~/.config/pi/agent/modes/office/skills",
         "~/.config/pi/agent/modes/frontend/skills/theme-factory"
@@ -43,8 +37,6 @@
       "kind": "major",
       "badge": "🎨 frontend",
       "description": "前端与 UI 设计模式：加载视觉设计与主题套件技能",
-      "isolateSkills": true,
-      "skills": ["frontend-design", "theme-factory", "web-usage", "deep-research"],
       "skillPaths": ["~/.config/pi/agent/modes/frontend/skills"],
       "preloadSkills": ["frontend-design"],
       "instructions": "当前处于【前端设计模式 (frontend-mode)】。\n- 避免千篇一律的模板化 UI，注重排版层级、色彩搭配与微交互质感。"
@@ -53,8 +45,6 @@
       "kind": "major",
       "badge": "🧩 pi-dev",
       "description": "Pi 扩展与技能开发模式：加载 pi-extension-builder 与 skill-creator",
-      "isolateSkills": true,
-      "skills": ["pi-extension-builder", "skill-creator", "web-usage", "deep-research"],
       "skillPaths": ["~/.config/pi/agent/modes/pi-dev/skills"],
       "preloadSkills": ["pi-extension-builder"],
       "instructions": "当前处于【Pi 扩展与技能开发模式 (pi-dev-mode)】。\n- 遵循 Pi Extension API 契约与规范，充分考虑生命周期钩子、TUI 渲染及非交互式 RPC 兼容性。"
@@ -70,7 +60,7 @@
       "kind": "minor",
       "badge": "🧐 review",
       "description": "审稿评审次模式：只读防误改，强化学术同行评审评估规则",
-      "skills": ["paper-reviewing"],
+      "skillPaths": ["~/.config/pi/agent/modes/paper/skills/paper-reviewing"],
       "preloadSkills": ["paper-reviewing"],
       "denyTools": ["edit", "write"],
       "instructions": "【审稿评审次模式已开启】以同行审稿人视角严格审查论述严谨性、创新性及实验论证，只做评述不修改原文。"
@@ -79,7 +69,6 @@
       "kind": "minor",
       "badge": "🐝 swarm",
       "description": "多智能体协同次模式：挂载 pi-subagents 与 council-mode 编排能力",
-      "skills": ["pi-subagents", "council-mode"],
       "instructions": "【子智能体次模式已开启】遇到可并行拆解或需要多视角论辩的复杂任务时，积极利用 subagent 或 council-mode。"
     }
   }
