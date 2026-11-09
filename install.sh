@@ -47,6 +47,12 @@ clone() {
     || echo "  ✗ 克隆 $name 失败"
 }
 
+# 0. Git Submodules
+if [ -f "$DOTFILES_DIR/.gitmodules" ]; then
+  echo "▶ 初始化与更新 Git submodules..."
+  git -C "$DOTFILES_DIR" -c protocol.file.allow=always submodule update --init --recursive 2>/dev/null || true
+fi
+
 # 1. Shell
 link "$DOTFILES_DIR/tools/bash/bash_profile" "$HOME/.bash_profile"
 link "$DOTFILES_DIR/tools/bash/bashrc" "$HOME/.bashrc"
@@ -137,6 +143,8 @@ link "$DOTFILES_DIR/tools/pi/agent/APPEND_SYSTEM.md" "$PI_AGENT_CONFIG/APPEND_SY
 link "$DOTFILES_DIR/tools/pi/agent/models.json" "$PI_AGENT_CONFIG/models.json"
 link "$DOTFILES_DIR/tools/pi/agent/prompts" "$PI_AGENT_CONFIG/prompts"
 link "$DOTFILES_DIR/tools/pi/agent/skills" "$PI_AGENT_CONFIG/skills"
+link "$DOTFILES_DIR/tools/pi/agent/modes" "$PI_AGENT_CONFIG/modes"
+link "$DOTFILES_DIR/tools/pi/agent/modes/modes.json" "$PI_AGENT_CONFIG/modes.json"
 link "$DOTFILES_DIR/tools/pi/agent/extensions" "$PI_AGENT_CONFIG/extensions"
 
 # npm install for all extensions (含 package.json 的子目录)

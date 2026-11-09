@@ -1,0 +1,86 @@
+{
+  "modes": {
+    "paper": {
+      "kind": "major",
+      "badge": "📄 paper",
+      "description": "学术论文模式：集成论文写作与审稿评估技能，排版与学术规范指导",
+      "isolateSkills": true,
+      "skills": ["paper-writing", "paper-reviewing", "deep-research", "web-usage", "pdf", "docx"],
+      "skillPaths": ["~/.config/pi/agent/modes/paper/skills"],
+      "preloadSkills": ["paper-writing"],
+      "thinkingLevel": "high",
+      "instructions": "当前处于【学术论文模式 (paper-mode)】。\n- 严格遵循学术写作规范与同行评审标准，保持术语一致性与逻辑严密性。\n- 审阅时重点评估创新性、论证完备性与潜在缺陷；修改或撰写时优先保证行文流畅度与上下文衔接。",
+      "autoMatch": {
+        "files": ["*.tex", "*.bib", "latexmkrc"]
+      }
+    },
+    "experiment": {
+      "kind": "major",
+      "badge": "🧪 exp",
+      "description": "实验计算模式：挂载 Colab / GPU 云端环境与自动化实验脚本能力",
+      "isolateSkills": true,
+      "skills": ["colab-operator", "web-usage", "deep-research"],
+      "skillPaths": ["~/.config/pi/agent/modes/experiment/skills"],
+      "preloadSkills": ["colab-operator"],
+      "instructions": "当前处于【实验计算模式 (experiment-mode)】。\n- 专注于算法实验配置、GPU/TPU 计算任务执行、环境依赖管理及实验数据产出。"
+    },
+    "office": {
+      "kind": "major",
+      "badge": "📊 office",
+      "description": "办公文档模式：Word / Excel / PPT / PDF 文档与图表排版处理",
+      "isolateSkills": true,
+      "skills": ["docx", "xlsx", "pptx", "pdf", "theme-factory", "deep-research", "web-usage"],
+      "skillPaths": [
+        "~/.config/pi/agent/modes/office/skills",
+        "~/.config/pi/agent/modes/frontend/skills/theme-factory"
+      ],
+      "instructions": "当前处于【办公文档模式 (office-mode)】。\n- 处理文档时优先保持版式优美与格式规范，必要时检查 WPS 交互状态。",
+      "autoMatch": {
+        "files": ["*.docx", "*.xlsx", "*.pptx"]
+      }
+    },
+    "frontend": {
+      "kind": "major",
+      "badge": "🎨 frontend",
+      "description": "前端与 UI 设计模式：加载视觉设计与主题套件技能",
+      "isolateSkills": true,
+      "skills": ["frontend-design", "theme-factory", "web-usage", "deep-research"],
+      "skillPaths": ["~/.config/pi/agent/modes/frontend/skills"],
+      "preloadSkills": ["frontend-design"],
+      "instructions": "当前处于【前端设计模式 (frontend-mode)】。\n- 避免千篇一律的模板化 UI，注重排版层级、色彩搭配与微交互质感。"
+    },
+    "pi-dev": {
+      "kind": "major",
+      "badge": "🧩 pi-dev",
+      "description": "Pi 扩展与技能开发模式：加载 pi-extension-builder 与 skill-creator",
+      "isolateSkills": true,
+      "skills": ["pi-extension-builder", "skill-creator", "web-usage", "deep-research"],
+      "skillPaths": ["~/.config/pi/agent/modes/pi-dev/skills"],
+      "preloadSkills": ["pi-extension-builder"],
+      "instructions": "当前处于【Pi 扩展与技能开发模式 (pi-dev-mode)】。\n- 遵循 Pi Extension API 契约与规范，充分考虑生命周期钩子、TUI 渲染及非交互式 RPC 兼容性。"
+    },
+    "read-only": {
+      "kind": "minor",
+      "badge": "🔒 ro",
+      "description": "只读安全次模式：禁用 edit 与 write 工具，防止对文件造成任何修改",
+      "denyTools": ["edit", "write"],
+      "instructions": "【只读次模式已开启】严禁对文件进行任何写入或修改操作。"
+    },
+    "review-guard": {
+      "kind": "minor",
+      "badge": "🧐 review",
+      "description": "审稿评审次模式：只读防误改，强化学术同行评审评估规则",
+      "skills": ["paper-reviewing"],
+      "preloadSkills": ["paper-reviewing"],
+      "denyTools": ["edit", "write"],
+      "instructions": "【审稿评审次模式已开启】以同行审稿人视角严格审查论述严谨性、创新性及实验论证，只做评述不修改原文。"
+    },
+    "subagent-boost": {
+      "kind": "minor",
+      "badge": "🐝 swarm",
+      "description": "多智能体协同次模式：挂载 pi-subagents 与 council-mode 编排能力",
+      "skills": ["pi-subagents", "council-mode"],
+      "instructions": "【子智能体次模式已开启】遇到可并行拆解或需要多视角论辩的复杂任务时，积极利用 subagent 或 council-mode。"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+[submodule "tools/pi/agent/extensions/pi-mode"]
+	path = tools/pi/agent/extensions/pi-mode
+	url = /home/allen/Applications/pi-mode
