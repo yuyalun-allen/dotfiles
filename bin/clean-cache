@@ -2,7 +2,7 @@
 # ==============================================================================
 # clean-cache: 安全清理常见开发环境与系统用户缓存
 # ==============================================================================
-set -u
+set -euo pipefail
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -11,15 +11,21 @@ BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}"
+# 解析真实路径（处理软链接情况）
+REAL_CACHE_DIR="$(readlink -f "$CACHE_DIR" 2>/dev/null || echo "$CACHE_DIR")"
+TRASH_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/Trash"
+
 DRY_RUN=false
 DEEP_CLEAN=false
+CLEAN_DOCKER=true
 
 usage() {
     echo -e "${BOLD}用法:${NC} $(basename "$0") [选项]"
     echo ""
     echo -e "${BOLD}选项:${NC}"
-    echo -e "  -n, --dry-run   仅分析并列出主要缓存大小，不执行删除"
-    echo -e "  -a, --all       深度清理（包含 Go 模块缓存与 Paru 所有未安装包）"
+    echo -e "  -n, --dry-run   仅分析并列出主要缓存占用与 Docker 空间，不执行实际删除"
+    echo -e "  -a, --all       深度清理（包含 Go 模块、Paru 未安装包、Docker 未使用镜像/卷、rclone/httpdirfs 缓存）"
+    echo -e "  --no-docker     跳过 Docker 清理"
     echo -e "  -h, --help      显示本帮助信息"
     echo ""
     echo -e "${BOLD}默认清理项:${NC}"
@@ -28,6 +34,8 @@ usage() {
     echo -e "  - Node.js (npm cache, yarn cache, pnpm store)"
     echo -e "  - GitHub Actions 本地运行器 (~/.cache/act)"
     echo -e "  - Go 构建编译缓存 (go clean -cache)"
+    echo -e "  - Docker 系统空间 (已停止容器、悬挂镜像、构建缓存)"
+    echo -e "  - 用户回收站 (~/.local/share/Trash)"
     exit 0
 }
 
@@ -42,6 +50,10 @@ while [[ $# -gt 0 ]]; do
             DEEP_CLEAN=true
             shift
             ;;
+        --no-docker)
+            CLEAN_DOCKER=false
+            shift
+            ;;
         -h|--help)
             usage
             ;;
@@ -53,15 +65,24 @@ while [[ $# -gt 0 ]]; do
 done
 
 get_cache_size() {
-    (du -sh "$CACHE_DIR" 2>/dev/null || true) | awk '{print $1}'
+    (du -sh -L "$CACHE_DIR" 2>/dev/null || true) | awk '{print $1}'
 }
 
-echo -e "${BLUE}==>${NC} ${BOLD}当前 ~/.cache 总占用:${NC} $(get_cache_size)"
+echo -e "${BLUE}==>${NC} ${BOLD}当前 ~/.cache 总占用:${NC} $(get_cache_size) (${REAL_CACHE_DIR})"
 echo ""
 
 if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[预览模式] 主要缓存占用排行:${NC}"
-    (du -sh "$CACHE_DIR"/* 2>/dev/null || true) | sort -hr | head -n 15 || true
+    echo -e "${YELLOW}[预览模式] 主要缓存占用排行 (前 15 项):${NC}"
+    (du -sh -L "$CACHE_DIR"/* 2>/dev/null || true) | sort -hr | head -n 15 || true
+    if [ -d "$TRASH_DIR" ]; then
+        TRASH_SIZE=$(du -sh "$TRASH_DIR" 2>/dev/null | awk '{print $1}' || echo "0")
+        echo -e "\n${YELLOW}[预览模式] 回收站占用:${NC} ${TRASH_SIZE} (${TRASH_DIR})"
+    fi
+
+    if [ "$CLEAN_DOCKER" = true ] && command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+        echo -e "\n${YELLOW}[预览模式] Docker 存储占用与可回收空间:${NC}"
+        docker system df 2>/dev/null || true
+    fi
     exit 0
 fi
 
@@ -69,11 +90,11 @@ BEFORE_SIZE=$(get_cache_size)
 
 # 1. 清理 Paru / AUR 构建缓存
 if [ -d "$CACHE_DIR/paru/clone" ]; then
-    # 修复部分 AUR 打包目录可能生成的只写/无读权限目录 (如 pkg 目录)
-    chmod -R u+rwX "$CACHE_DIR/paru/clone" 2>/dev/null || true
-    PARU_CLONE_SIZE=$((du -sh "$CACHE_DIR/paru/clone" 2>/dev/null || true) | awk '{print $1}')
+    PARU_CLONE_SIZE=$(du -sh "$CACHE_DIR/paru/clone" 2>/dev/null | awk '{print $1}' || echo "0")
     echo -e "${GREEN}==>${NC} 清理 Paru AUR 构建临时目录 (${PARU_CLONE_SIZE})..."
-    rm -rf "$CACHE_DIR/paru/clone"/* 2>/dev/null || true
+    chmod -R u+rwX "$CACHE_DIR/paru/clone" 2>/dev/null || true
+    rm -rf "$CACHE_DIR/paru/clone"
+    mkdir -p "$CACHE_DIR/paru/clone"
 fi
 
 if command -v paru >/dev/null 2>&1; then
@@ -86,7 +107,7 @@ fi
 # 2. 清理 Python 相关缓存 (uv, pip)
 if command -v uv >/dev/null 2>&1; then
     if [ -d "$CACHE_DIR/uv" ]; then
-        UV_SIZE=$(du -sh "$CACHE_DIR/uv" 2>/dev/null | awk '{print $1}')
+        UV_SIZE=$(du -sh "$CACHE_DIR/uv" 2>/dev/null | awk '{print $1}' || echo "0")
         echo -e "${GREEN}==>${NC} 清理 uv 包缓存 (${UV_SIZE})..."
         uv cache clean >/dev/null 2>&1 || true
     fi
@@ -94,20 +115,21 @@ fi
 
 if command -v pip >/dev/null 2>&1; then
     if [ -d "$CACHE_DIR/pip" ]; then
-        echo -e "${GREEN}==>${NC} 清理 pip 缓存..."
+        PIP_SIZE=$(du -sh "$CACHE_DIR/pip" 2>/dev/null | awk '{print $1}' || echo "0")
+        echo -e "${GREEN}==>${NC} 清理 pip 缓存 (${PIP_SIZE})..."
         pip cache purge >/dev/null 2>&1 || true
     fi
 fi
 
 # 3. 清理前端包管理器缓存 (npm, yarn, pnpm)
 if command -v npm >/dev/null 2>&1 && [ -d "$CACHE_DIR/npm" ]; then
-    NPM_SIZE=$(du -sh "$CACHE_DIR/npm" 2>/dev/null | awk '{print $1}')
+    NPM_SIZE=$(du -sh "$CACHE_DIR/npm" 2>/dev/null | awk '{print $1}' || echo "0")
     echo -e "${GREEN}==>${NC} 清理 npm 缓存 (${NPM_SIZE})..."
     npm cache clean --force >/dev/null 2>&1 || true
 fi
 
 if command -v yarn >/dev/null 2>&1 && [ -d "$CACHE_DIR/yarn" ]; then
-    YARN_SIZE=$(du -sh "$CACHE_DIR/yarn" 2>/dev/null | awk '{print $1}')
+    YARN_SIZE=$(du -sh "$CACHE_DIR/yarn" 2>/dev/null | awk '{print $1}' || echo "0")
     echo -e "${GREEN}==>${NC} 清理 yarn 缓存 (${YARN_SIZE})..."
     yarn cache clean >/dev/null 2>&1 || true
 fi
@@ -119,18 +141,54 @@ fi
 
 # 4. 清理 act (GitHub Actions 本地运行器) 缓存
 if [ -d "$CACHE_DIR/act" ]; then
-    ACT_SIZE=$(du -sh "$CACHE_DIR/act" 2>/dev/null | awk '{print $1}')
+    ACT_SIZE=$(du -sh "$CACHE_DIR/act" 2>/dev/null | awk '{print $1}' || echo "0")
     echo -e "${GREEN}==>${NC} 清理 act 临时工具缓存 (${ACT_SIZE})..."
-    rm -rf "$CACHE_DIR/act"/*
+    rm -rf "$CACHE_DIR/act"
+    mkdir -p "$CACHE_DIR/act"
 fi
 
-# 5. 可选：Go 缓存（深度清理时清理 modcache，常规模式只清理构建缓存）
+# 5. 清理用户回收站
+if [ -d "$TRASH_DIR/files" ] && [ -n "$(ls -A "$TRASH_DIR/files" 2>/dev/null)" ]; then
+    TRASH_SIZE=$(du -sh "$TRASH_DIR" 2>/dev/null | awk '{print $1}' || echo "0")
+    echo -e "${GREEN}==>${NC} 清理回收站 (${TRASH_SIZE})..."
+    rm -rf "$TRASH_DIR/files"/* "$TRASH_DIR/info"/* 2>/dev/null || true
+fi
+
+# 6. Docker 空间清理
+if [ "$CLEAN_DOCKER" = true ] && command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+    if [ "$DEEP_CLEAN" = true ]; then
+        echo -e "${GREEN}==>${NC} [深度清理] 运行 docker system prune -a --volumes (清理全部未使用的镜像与卷)..."
+        docker system prune -a --volumes -f || true
+    else
+        echo -e "${GREEN}==>${NC} 运行 docker system prune (清理已停止容器、悬挂镜像与构建缓存)..."
+        docker system prune -f || true
+    fi
+fi
+
+# 7. Go 缓存与可选深度清理
 if command -v go >/dev/null 2>&1; then
     echo -e "${GREEN}==>${NC} 清理 Go 构建缓存..."
     go clean -cache >/dev/null 2>&1 || true
     if [ "$DEEP_CLEAN" = true ]; then
         echo -e "${GREEN}==>${NC} 清理 Go 模块下载缓存..."
         go clean -modcache >/dev/null 2>&1 || true
+    fi
+fi
+
+# 8. 深度清理模式附加项 (httpdirfs, rclone vfs)
+if [ "$DEEP_CLEAN" = true ]; then
+    if [ -d "$CACHE_DIR/httpdirfs" ]; then
+        HTTPDIRFS_SIZE=$(du -sh "$CACHE_DIR/httpdirfs" 2>/dev/null | awk '{print $1}' || echo "0")
+        echo -e "${GREEN}==>${NC} [深度清理] 清理 httpdirfs 下载缓存 (${HTTPDIRFS_SIZE})..."
+        rm -rf "$CACHE_DIR/httpdirfs"
+        mkdir -p "$CACHE_DIR/httpdirfs"
+    fi
+
+    if [ -d "$CACHE_DIR/rclone" ]; then
+        RCLONE_SIZE=$(du -sh "$CACHE_DIR/rclone" 2>/dev/null | awk '{print $1}' || echo "0")
+        echo -e "${GREEN}==>${NC} [深度清理] 清理 rclone VFS 缓存 (${RCLONE_SIZE})..."
+        rm -rf "$CACHE_DIR/rclone"
+        mkdir -p "$CACHE_DIR/rclone"
     fi
 fi
 
