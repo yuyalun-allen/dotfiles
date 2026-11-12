@@ -1,6 +1,6 @@
 ---
 name: web-usage
-description: 用于处理网页浏览、信息提取与搜索任务的标准技能。根据用户输入形态（静态URL、动态/JS站点、需要认证/登录/付费墙的站点、通用关键词搜索）智能路由至最合适的获取策略（curl、CDP、pi-control-chrome 或 web_search）。
+description: 用于处理网页浏览、信息提取与搜索任务的标准技能，需要访问互联网资源时总是载入该技能。根据用户输入形态（静态URL、动态/JS站点、需要认证/登录/付费墙的站点、通用关键词搜索）智能路由至最合适的获取策略（curl、CDP、pi-control-chrome 或 web_search）。
 ---
 
 # Web Usage 技能规范

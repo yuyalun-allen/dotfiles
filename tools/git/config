@@ -30,3 +30,7 @@
 	st = status
 [color]
 	ui = auto
+[credential "https://github.com/allen-fisher"]
+	username = allen-fisher
+[credential "https://github.com/yuyalun-allen"]
+	username = yuyalun-allen

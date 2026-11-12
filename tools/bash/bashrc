@@ -95,7 +95,13 @@ alias activate=". ./.venv/bin/activate"
 alias reboot="systemctl reboot"
 alias poweroff="systemctl poweroff"
 
-alias log='echo "> 注：人类编辑，Agent 只读" > memo.md && vim memo.md'
+log() {
+    local target="${1:-memo.md}"
+    if [ ! -f "$target" ]; then
+        echo "> 注：人类编辑，Agent 只读" > "$target"
+    fi
+    vim "$target"
+}
 
 
 # ===== 游戏菜单：自包含文件，含菜单命令 =====

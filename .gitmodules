@@ -1,3 +1,6 @@
 [submodule "tools/pi/agent/extensions/pi-mode"]
 	path = tools/pi/agent/extensions/pi-mode
 	url = /home/allen/Applications/pi-mode
+[submodule "tools/pi/agent/extensions/super-pi"]
+	path = tools/pi/agent/extensions/super-pi
+	url = /home/allen/Applications/super-pi

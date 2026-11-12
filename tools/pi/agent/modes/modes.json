@@ -5,9 +5,7 @@
       "badge": "📄 paper",
       "description": "学术论文模式：集成论文写作与审稿评估技能，排版与学术规范指导",
       "skillPaths": ["~/.config/pi/agent/modes/paper/skills"],
-      "preloadSkills": ["paper-writing"],
-      "thinkingLevel": "high",
-      "instructions": "当前处于【学术论文模式 (paper-mode)】。\n- 严格遵循学术写作规范与同行评审标准，保持术语一致性与逻辑严密性。\n- 审阅时重点评估创新性、论证完备性与潜在缺陷；修改或撰写时优先保证行文流畅度与上下文衔接。",
+      "instructions": "当前处于【学术论文模式 (paper-mode)】。\n- 严格遵循学术写作规范与同行评审标准，保持术语一致性与逻辑严密性。\n- 审阅时重点评估 novelty, solidity 和 significance ；修改或撰写时优先保证行文流畅度与上下文衔接。\n- 不需要手动编译 LaTeX 文件，监听程序会自动编译。",
       "autoMatch": {
         "files": ["*.tex", "*.bib", "latexmkrc"]
       }
@@ -17,7 +15,6 @@
       "badge": "🧪 exp",
       "description": "实验计算模式：挂载 Colab / GPU 云端环境与自动化实验脚本能力",
       "skillPaths": ["~/.config/pi/agent/modes/experiment/skills"],
-      "preloadSkills": ["colab-operator"],
       "instructions": "当前处于【实验计算模式 (experiment-mode)】。\n- 专注于算法实验配置、GPU/TPU 计算任务执行、环境依赖管理及实验数据产出。"
     },
     "office": {
@@ -46,7 +43,6 @@
       "badge": "🧩 pi-dev",
       "description": "Pi 扩展与技能开发模式：加载 pi-extension-builder 与 skill-creator",
       "skillPaths": ["~/.config/pi/agent/modes/pi-dev/skills"],
-      "preloadSkills": ["pi-extension-builder"],
       "instructions": "当前处于【Pi 扩展与技能开发模式 (pi-dev-mode)】。\n- 遵循 Pi Extension API 契约与规范，充分考虑生命周期钩子、TUI 渲染及非交互式 RPC 兼容性。"
     },
     "read-only": {

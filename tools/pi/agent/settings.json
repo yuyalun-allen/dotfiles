@@ -1,16 +1,25 @@
 {
-  "lastChangelogVersion": "1.4.0",
+  "lastChangelogVersion": "1.5.2",
   "defaultProvider": "antigravity",
   "defaultModel": "gemini-3.8-flash",
   "defaultThinkingLevel": "medium",
   "hideThinkingBlock": false,
   "packages": [
-    "git:github.com/obra/superpowers",
     "npm:pi-subagents",
     "npm:pi-antigravity",
     "npm:@narumitw/pi-chrome-devtools",
-    "npm:@gotgenes/pi-anthropic-auth"
+    "npm:@gotgenes/pi-anthropic-auth",
+    "npm:pi-background-tasks@latest"
   ],
   "theme": "dark",
-  "tuiMode": "regular"
+  "tuiMode": "regular",
+  "extensions": [
+    "-extensions/permission-gate/index.ts",
+    "+extensions/refer/index.ts",
+    "+extensions/refer-cc/index.ts"
+  ],
+  "extensionChangelogVersions": {
+    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.88.0",
+    "{\"source\":\"npm:@gotgenes/pi-anthropic-auth\",\"scope\":\"user\"}": "3.4.4"
+  }
 }
